@@ -1,0 +1,16 @@
+# Optional: spin up Prometheus locally to scrape llama-server.
+#   docker run --rm -p 9090:9090 \
+#     -v $(pwd)/02-llama-cpp-server/prometheus.yml:/etc/prometheus/prometheus.yml \
+#     prom/prometheus
+# Then open http://localhost:9090 and query e.g. llamacpp:kv_cache_usage_ratio.
+
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: llama-cpp
+    metrics_path: /metrics
+    static_configs:
+      # host.docker.internal works on macOS / Windows Docker Desktop.
+      # On Linux, replace with your host's LAN IP or use --network=host.
+      - targets: ['host.docker.internal:8080']

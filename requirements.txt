@@ -1,0 +1,18 @@
+# Day 20 lab — Python dependencies (cross-platform).
+# llama-cpp-python is installed separately by the platform setup script
+# so it can be built with Metal/CUDA/Vulkan flags depending on hardware.
+
+huggingface_hub>=0.24.0
+numpy>=1.26.0
+requests>=2.32.0
+
+# Benchmarking / load testing
+locust>=2.30.0          # 02-vllm-serving load test
+httpx>=0.27.0           # async client for benchmarks
+tabulate>=0.9.0         # pretty-print results tables
+
+# Observability scratchpad
+matplotlib>=3.8.0       # latency histograms in benchmarks/
+
+# Notebook-friendly (optional but useful for student exploration)
+ipykernel>=6.29.0
