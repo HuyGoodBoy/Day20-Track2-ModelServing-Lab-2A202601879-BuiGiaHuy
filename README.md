@@ -16,7 +16,7 @@ P99**, đẩy nó tới điểm bão hoà bằng load test, rồi tune một kno
 
 | | |
 |---|---|
-| **Model** | **Gemma 4 E2B** (Apache-2.0, Unsloth GGUF) — **một** model cho cả lab |
+| **Model** | **Gemma 4 E2B** — [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) · Apache-2.0, không gated · **một** model cho cả lab |
 | **Runtime** | **llama.cpp prebuilt binary** — tải 11–33 MB (bản Windows CUDA 140–240 MB), **không compile** |
 | **Cần** | Python ≥ 3.10 · **8 GB RAM** · ~10 GB đĩa |
 | **Không cần** | GPU · compiler · Docker · API key · tài khoản trả phí |

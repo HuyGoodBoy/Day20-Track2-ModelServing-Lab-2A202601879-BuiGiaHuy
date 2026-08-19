@@ -43,14 +43,35 @@ Bạn sẽ thấy thông tin về CPU, số core, RAM, accelerator và model dù
 
 | RAM | Cách làm |
 |---|---|
-| **≥ 8 GB** | Tiếp tục bước 0.2 trên laptop |
+| **≥ 8 GB** | Tiếp tục bước 0.2 và 0.3 trên laptop |
 | **< 8 GB** | Dừng tại đây. Mở [`cloud/README.md`](cloud/README.md) và làm trên Colab/Kaggle. **Không mất điểm.** |
 
 → Sinh ra: **`hardware.json`** *(rubric 1)*
 
 → **Chụp screenshot ngay:** `submission/screenshots/01-hardware-probe.png`
 
-## Bước 0.2 — Cài đặt
+## Bước 0.2 — Model dùng trong lab (biết trước để chuẩn bị)
+
+Cả lab dùng **một** model: **[unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)** — Apache-2.0,
+**không gated**, không cần token, không cần bấm accept license.
+
+| Vai trò | File | Size | Link tải trực tiếp |
+|---|---|--:|---|
+| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | 2.97 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf) |
+| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` | 2.24 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q2_K_XL.gguf) |
+| bonus C1 (optional) | `mtp-gemma-4-E2B-it.gguf` | 0.09 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/mtp-gemma-4-E2B-it.gguf) |
+
+**Bước 0.3 (`make setup`) tự tải 2 file đầu** — bạn không cần làm gì thủ công. Bảng trên
+để bạn biết mình đang tải cái gì, và để dùng khi mạng trường chặn Hugging Face.
+
+Xem toàn bộ file trong repo: **[unsloth/gemma-4-E2B-it-GGUF/tree/main](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/tree/main)**
+
+Nếu tải tự động fail, script sẽ in ra đúng lệnh `curl` cần chạy. Chi tiết:
+[`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md).
+
+---
+
+## Bước 0.3 — Cài đặt
 
 ```bash
 make setup

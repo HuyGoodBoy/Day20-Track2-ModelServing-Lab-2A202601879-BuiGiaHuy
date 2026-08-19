@@ -1,63 +1,121 @@
-# Manual model download
+# Tải model thủ công
 
-If `make setup` cannot reach Hugging Face (university firewall, captive portal, slow
-link), download the two GGUF files in a browser and drop them into `models/`.
+Dùng trang này khi `make setup` không tải được model (mạng trường chặn Hugging Face,
+captive portal, mạng quá chậm).
 
-## What you need
+## Model của lab
 
-Repo: **[unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/tree/main)**
-— Apache-2.0, **not gated**, no login required.
+**[unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)**
+— Apache-2.0, **không gated**: không cần login, không cần token, không cần accept license.
 
-| Role | File | Size |
+Xem toàn bộ file: **[tree/main](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/tree/main)**
+
+| Vai trò | File | Size |
 |---|---|--:|
-| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | ~3.0 GB |
-| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` | ~2.2 GB |
-| optional (bonus C1) | `mtp-gemma-4-E2B-it.gguf` | ~98 MB |
+| primary (bắt buộc) | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | 2.97 GB |
+| compare (bắt buộc) | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` | 2.24 GB |
+| bonus C1 (optional) | `mtp-gemma-4-E2B-it.gguf` | 0.09 GB |
 
-## Steps
+Bạn cần **hai file đầu**. Thiếu file `compare` thì mất hàng thứ hai của rubric 3–5.
 
-1. Open the repo link above, click **Files and versions**.
-2. Download both files (the ⬇ icon next to each).
-3. Put them anywhere under `models/` in the repo root — subfolders are fine, the
-   script searches recursively.
-4. Write the manifest:
+## Cách 1 — curl / wget
 
-   ```bash
-   python labs/00-setup/download-model.py --skip-download
-   ```
-
-   That produces `models/active.json` pointing at the files it found. Add
-   `--with-mtp` if you also grabbed the MTP head.
-
-5. Confirm:
-
-   ```bash
-   make verify        # should now pass the "Model manifest" check
-   ```
-
-## If the filenames do not match
-
-`--skip-download` looks for the exact names in the table above. Unsloth occasionally
-re-uploads with different quant labels. If yours differ, either rename your files to
-match, or edit `MODEL_PRIMARY` / `MODEL_COMPARE` at the top of
-[`lib/labkit.py`](../../lib/labkit.py) and say so in REFLECTION §1.
-
-## Mirrors
-
-- `hf-mirror.com` — same paths, e.g.
-  `https://hf-mirror.com/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf`
-- ModelScope mirrors many GGUF repos
-- Ask your instructor — a USB copy is the fastest option in a room with one uplink
-
-## The runtime binaries too?
-
-`fetch-runtime.py` pulls from GitHub releases, which is usually reachable when HF is
-not. If it is also blocked:
+Chạy ở **repo root**:
 
 ```bash
-python labs/00-setup/fetch-runtime.py --list      # print the asset names
+mkdir -p models
+
+curl -L -o models/gemma-4-E2B-it-UD-Q4_K_XL.gguf \
+  https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf
+
+curl -L -o models/gemma-4-E2B-it-UD-Q2_K_XL.gguf \
+  https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q2_K_XL.gguf
 ```
 
-Download the asset for your platform from
-<https://github.com/ggml-org/llama.cpp/releases/tag/b10488> and extract it into
-`runtime/b10488/`. Any internal folder layout works — the lab globs for the binary.
+`-L` là bắt buộc — Hugging Face redirect sang CDN. Nếu bị ngắt giữa đường, thêm `-C -`
+để tiếp tục thay vì tải lại từ đầu:
+
+```bash
+curl -L -C - -o models/gemma-4-E2B-it-UD-Q4_K_XL.gguf \
+  https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf
+```
+
+Windows PowerShell:
+
+```powershell
+mkdir models -Force
+curl.exe -L -o models\gemma-4-E2B-it-UD-Q4_K_XL.gguf `
+  https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf
+curl.exe -L -o models\gemma-4-E2B-it-UD-Q2_K_XL.gguf `
+  https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q2_K_XL.gguf
+```
+
+## Cách 2 — mirror (khi Hugging Face bị chặn hẳn)
+
+`hf-mirror.com` dùng **đúng đường dẫn**, chỉ đổi hostname:
+
+```bash
+curl -L -o models/gemma-4-E2B-it-UD-Q4_K_XL.gguf \
+  https://hf-mirror.com/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf
+```
+
+Hoặc set biến môi trường rồi để script tự tải như bình thường:
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com make setup
+```
+
+## Cách 3 — browser
+
+Mở [tree/main](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/tree/main), bấm icon ⬇
+cạnh hai file, rồi copy chúng vào `models/` trong repo. Thư mục con thoải mái — script
+tìm đệ quy.
+
+## Sau khi có file: ghi manifest
+
+```bash
+python labs/00-setup/download-model.py --skip-download
+```
+
+Lệnh này không tải gì, chỉ tìm file và ghi `models/active.json` (rubric item 2). Thêm
+`--with-mtp` nếu bạn cũng tải MTP head.
+
+Kiểm tra:
+
+```bash
+make verify      # mục "Model manifest" phải PASS
+```
+
+## Kiểm tra file có nguyên vẹn không
+
+Nếu server báo lỗi lạ khi load model, khả năng cao file bị tải thiếu. So size:
+
+```bash
+ls -l models/*.gguf
+```
+
+Phải khớp bảng ở trên (2.97 GB và 2.24 GB). File nhỏ hơn đáng kể = tải dở, xoá và tải lại.
+
+## Nếu tên file không khớp
+
+`--skip-download` tìm đúng tên trong bảng trên. Unsloth đôi khi re-upload với nhãn quant
+khác. Khi đó: đổi tên file cho khớp, **hoặc** sửa `MODEL_PRIMARY` / `MODEL_COMPARE` ở đầu
+[`lib/labkit.py`](../../lib/labkit.py) và ghi lại việc đó trong REFLECTION §1.
+
+## Runtime binary cũng bị chặn?
+
+`fetch-runtime.py` tải từ GitHub Releases, thường thông khi Hugging Face bị chặn. Nếu cả
+GitHub cũng bị chặn:
+
+```bash
+python labs/00-setup/fetch-runtime.py --list      # in ra tên các asset
+```
+
+Tải asset đúng platform của bạn từ
+<https://github.com/ggml-org/llama.cpp/releases/tag/b10488> rồi giải nén vào
+`runtime/b10488/`. Layout bên trong không quan trọng — lab tìm binary bằng glob.
+
+## Vẫn không được?
+
+Máy dưới 8 GB RAM hoặc mạng không thông: dùng [`cloud/`](../../cloud/README.md)
+(Colab / Kaggle). Điểm không bị ảnh hưởng, chỉ cần khai báo ở REFLECTION §1.

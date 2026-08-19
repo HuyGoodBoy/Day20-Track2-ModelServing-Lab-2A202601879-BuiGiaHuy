@@ -19,7 +19,7 @@ pwsh -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1
 |---|---|---|
 | `detect-hardware.py` | `hardware.json` | Stdlib only — runs before any install. Every other track reads this for thread count and GPU offload defaults. |
 | `fetch-runtime.py` | `runtime/b10488/…` | Asks the llama.cpp release API which assets exist, picks the right one for your OS + accelerator, extracts it. 10–35 MB (more for CUDA). |
-| `download-model.py` | `models/*.gguf` + `models/active.json` | Gemma 4 E2B, two quantizations, ~5.2 GB total. |
+| `download-model.py` | `models/*.gguf` + `models/active.json` | Gemma 4 E2B, two quantizations, ~5.2 GB total, from [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) (Apache-2.0, ungated). Prints the direct URLs, and the exact `curl` commands if the download fails. |
 
 Only `hardware.json` and `models/active.json` get committed. The weights and binaries
 are gitignored, and `make verify` never asks for them.

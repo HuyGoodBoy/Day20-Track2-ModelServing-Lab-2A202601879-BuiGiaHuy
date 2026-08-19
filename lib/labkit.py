@@ -36,6 +36,20 @@ MLX_REPO = "unsloth/gemma-4-E2B-it-UD-MLX-4bit"    # bonus B5 (Apple Silicon)
 
 MIN_RAM_GB = 8.0  # below this, students take the cloud/ notebook fallback
 
+HF_HOST = "https://huggingface.co"
+HF_MIRROR = "https://hf-mirror.com"   # same paths; useful when HF is blocked
+
+
+def model_repo_url(mirror: bool = False) -> str:
+    """Browsable page for the model repo."""
+    return f"{HF_MIRROR if mirror else HF_HOST}/{MODEL_REPO}"
+
+
+def model_file_url(filename: str, mirror: bool = False) -> str:
+    """Direct download URL for one GGUF file (what curl/wget want)."""
+    host = HF_MIRROR if mirror else HF_HOST
+    return f"{host}/{MODEL_REPO}/resolve/main/{filename}"
+
 DEFAULT_PORT = 8080
 EMBED_PORT = 8081
 

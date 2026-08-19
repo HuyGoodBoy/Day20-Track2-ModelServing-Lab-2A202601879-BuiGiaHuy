@@ -41,6 +41,7 @@ def fetch(repo_id: str, filename: str, models_dir: pathlib.Path) -> pathlib.Path
         print(f"    already present: {existing.relative_to(labkit.repo_root())}")
         return existing
     print(f"==> Downloading {filename}")
+    print(f"    {labkit.model_file_url(filename)}")
     return pathlib.Path(
         hf_hub_download(repo_id=repo_id, filename=filename, local_dir=str(models_dir))
     )
@@ -57,6 +58,9 @@ def main() -> int:
     models_dir = labkit.repo_root() / "models"
     models_dir.mkdir(exist_ok=True)
     repo = labkit.MODEL_REPO
+
+    print(f"==> Model repo: {labkit.model_repo_url()}")
+    print("    Apache-2.0, not gated — no token, no license click-through.")
 
     wanted = [labkit.MODEL_PRIMARY, labkit.MODEL_COMPARE]
     if args.with_mtp:
@@ -80,10 +84,20 @@ def main() -> int:
         except ImportError:
             labkit.die("huggingface_hub not installed.", "Run: make setup")
         except Exception as exc:  # noqa: BLE001 -- surface the real cause to the student
-            labkit.die(
-                f"Download failed: {exc}",
-                "Network blocked? See labs/00-setup/MANUAL-DOWNLOAD.md for the browser path.",
-            )
+            print(f"\nERROR: download failed: {exc}", file=sys.stderr)
+            print("\nGrab the files by hand instead — either in a browser:", file=sys.stderr)
+            print(f"  {labkit.model_repo_url()}/tree/main", file=sys.stderr)
+            print("\nor on the command line:", file=sys.stderr)
+            for f in wanted:
+                print(f"  curl -L -o models/{f} \\\n    {labkit.model_file_url(f)}",
+                      file=sys.stderr)
+            print("\nIf Hugging Face is blocked entirely, the same paths work on the mirror:",
+                  file=sys.stderr)
+            print(f"  {labkit.model_file_url(wanted[0], mirror=True)}", file=sys.stderr)
+            print("\nThen write the manifest:", file=sys.stderr)
+            print("  python labs/00-setup/download-model.py --skip-download", file=sys.stderr)
+            print("\nFull instructions: labs/00-setup/MANUAL-DOWNLOAD.md", file=sys.stderr)
+            return 1
 
     def rel(p: pathlib.Path) -> str:
         try:
