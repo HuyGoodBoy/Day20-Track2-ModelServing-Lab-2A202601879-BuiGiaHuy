@@ -98,6 +98,37 @@ nén vào clone local của bạn, rồi làm lần lượt:
 | `couldn't bind HTTP server socket ... port: 8080` | Colab đã chiếm port 8080. Notebook đã set `LAB_SERVER_PORT = '8090'` sẵn — nếu bạn sửa dòng đó thì chọn port còn trống khác. |
 | Hết disk | Free tier thường đủ cho 5.2 GB. Nếu buộc phải xóa, xóa `models/*Q2*`; bạn sẽ mất hàng quantization thứ hai của rubric 3–5. |
 
+## Số đo thật trên Colab (đã kiểm chứng)
+
+Toàn bộ base track đã được chạy end-to-end trên một Colab CPU runtime. Đây là kết quả
+thật, để bạn biết trước cái gì là bình thường:
+
+| | Colab CPU runtime |
+|---|--:|
+| CPU | Intel Xeon @ 2.20 GHz, **1 physical / 2 logical** core, AVX2 |
+| RAM | 12.7 GB |
+| Model load (Qwen3.5 0.8B Q4_K_M) | ~3.5 s |
+| Decode | **~8–10 tok/s** |
+| 1 request 48 token | **~6–7 s** |
+| Trần throughput | **~0.15 request/s** — chỉ 1 core, thêm slot không giúp |
+| Request hoàn thành trong 1 phút load | **~7–10** |
+| `requests_deferred` lúc 50 user | **46** |
+
+Hai điều rút ra:
+
+1. **Percentile sẽ mỏng.** Ít mẫu thì percentile không chắc, và `load-report` tự cảnh báo
+   điều đó. Muốn số chắc hơn thì đặt `LOAD_DURATION = '3m'` ở cell 1.
+2. **Bằng chứng saturation lại rõ hơn trên máy chậm.** `processing=4` cùng với
+   `deferred=46` là hình ảnh trực tiếp của queue time — đúng chỗ goodput bị mất mà deck
+   §8 nói tới. Trên laptop nhanh, gauge này thường bằng 0 và bài học khó thấy hơn.
+
+Trên Colab, `verify` cũng báo `hardware.json` và các file `locust-*_stats.csv` là
+`NOT committed`. Bình thường: clone trong VM không phải repo của bạn. Sau khi giải nén
+zip vào clone local và `git add`, các dòng đó sẽ hết.
+
+Thread sweep (`tune`) trên VM 1 core cho grid rất ngắn — thường chỉ `[1, 2]` với spread
+~1.07x. Vẫn hợp lệ; phần giải thích mới là chỗ được chấm.
+
 ## Giới hạn cần nêu trong REFLECTION
 
 Cloud VM không phải laptop của bạn. VM có core count và memory bandwidth khác, chạy
