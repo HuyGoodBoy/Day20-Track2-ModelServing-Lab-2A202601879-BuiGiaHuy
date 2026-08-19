@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Pre-submission sanity check.
+"""Pre-submission check. Run `make verify` before you push.
 
-Run from repo root: `make verify` (or `python scripts/verify.py`).
+Checks what is *committed*, because that is all the grader can see. Large local
+artifacts (the GGUF weights, the runtime binaries) are gitignored by design, so
+their absence is reported as information, never as a failure -- otherwise this
+script could never pass on a fresh clone, which is exactly what the grader does.
 
-Exits 0 if every required artifact is present + REFLECTION.md has been
-edited beyond the template. Exits non-zero with a checklist of what's
-missing — no files written.
+Exit 0 means your repo is ready. Exit 1 prints the checklist of what is missing.
 """
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import sys
-from pathlib import Path
 
-# Patterns that indicate the REFLECTION.md is still the template (placeholders left in).
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "lib"))
+import labkit  # noqa: E402
+
+MIN_SCREENSHOTS = 5
+
+# Placeholders left behind by the REFLECTION template.
 TEMPLATE_MARKERS = [
     r"<Họ Tên>",
     r"<A20-K1 / A20-K2",
@@ -22,145 +28,166 @@ TEMPLATE_MARKERS = [
     r"<macOS 14 / Windows 11",
     r"^_Answer here\._?\s*$",
 ]
+# Every generated report ends with a section the student must replace.
+UNANSWERED = re.compile(r"required -- replace this line", re.IGNORECASE)
+
+OK, WARN, BAD = "  ✓", "  •", "  ✗"
 
 
-def check_file(path: Path, label: str, problems: list[str]) -> bool:
+class Report:
+    def __init__(self) -> None:
+        self.problems: list[str] = []
+        self.notes: list[str] = []
+
+    def fail(self, msg: str) -> None:
+        self.problems.append(msg)
+        print(f"{BAD} {msg}")
+
+    def ok(self, msg: str) -> None:
+        print(f"{OK} {msg}")
+
+    def note(self, msg: str) -> None:
+        self.notes.append(msg)
+        print(f"{WARN} {msg}")
+
+
+def need_file(r: Report, path: pathlib.Path, label: str, how: str) -> pathlib.Path | None:
+    rel = path.relative_to(labkit.repo_root())
     if not path.exists():
-        problems.append(f"MISSING  {label}: {path}")
-        return False
+        r.fail(f"{label}: {rel} is missing — run `{how}`")
+        return None
     if path.stat().st_size == 0:
-        problems.append(f"EMPTY    {label}: {path}")
+        r.fail(f"{label}: {rel} is empty — run `{how}`")
+        return None
+    if path.suffix == ".md" and UNANSWERED.search(path.read_text()):
+        r.fail(f"{label}: {rel} still has an unanswered 'replace this line' section")
+        return None
+    r.ok(f"{label}: {rel}")
+    return path
+
+
+def any_file(r: Report, patterns: list[str], label: str, how: str) -> bool:
+    root = labkit.repo_root()
+    hits = [p for pat in patterns for p in sorted(root.glob(pat)) if p.stat().st_size > 0]
+    if not hits:
+        r.fail(f"{label}: none of {patterns} found — run `{how}`")
         return False
+    stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(p.read_text())]
+    if stale and len(stale) == len([p for p in hits if p.suffix == ".md"]):
+        r.fail(f"{label}: {stale[0].relative_to(root)} still has an unanswered section")
+        return False
+    r.ok(f"{label}: {', '.join(str(p.relative_to(root)) for p in hits[:3])}")
     return True
 
 
-def check_screenshots(folder: Path, min_count: int, problems: list[str]) -> int:
-    if not folder.exists():
-        problems.append(f"MISSING  submission/screenshots/ folder")
-        return 0
-    images = [p for p in folder.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
-    if len(images) < min_count:
-        problems.append(
-            f"TOO FEW  submission/screenshots/: have {len(images)}, need at least {min_count}. "
-            f"See submission/screenshots/README.md for the list."
-        )
-    return len(images)
-
-
-def check_reflection_edited(path: Path, problems: list[str]) -> bool:
+def check_manifest(r: Report) -> None:
+    path = labkit.active_json()
     if not path.exists():
-        problems.append(f"MISSING  submission/REFLECTION.md")
-        return False
-    text = path.read_text()
-    leftover = []
-    for pattern in TEMPLATE_MARKERS:
-        # Some patterns are line-anchored (start with ^), others are inline.
-        flags = re.MULTILINE if pattern.startswith("^") else 0
-        if re.search(pattern, text, flags):
-            leftover.append(pattern)
-    if len(leftover) >= 3:
-        problems.append(
-            f"UNEDITED submission/REFLECTION.md still has {len(leftover)} template placeholders. "
-            f"Fill in your own numbers and answers."
-        )
-        return False
-    return True
-
-
-def check_active_model(active_json: Path, problems: list[str]) -> bool:
-    if not check_file(active_json, "models/active.json", problems):
-        return False
-    try:
-        cfg = json.loads(active_json.read_text())
-    except Exception as exc:
-        problems.append(f"CORRUPT  models/active.json — {exc}")
-        return False
-    primary = Path(cfg.get("primary_model", ""))
-    if not primary.exists():
-        problems.append(
-            f"MISSING  primary GGUF file referenced by models/active.json: {primary}"
-        )
-        return False
-    return True
-
-
-def maybe_check_server(problems: list[str]) -> None:
-    """Optional: if a llama-server is running on :8080, hit it. If not, silent."""
-    try:
-        import httpx  # noqa: WPS433  — optional import
-    except ImportError:
+        r.fail("Model manifest: models/active.json is missing — run `make setup`")
         return
     try:
-        r = httpx.post(
-            "http://localhost:8080/v1/chat/completions",
-            json={
-                "model": "local",
-                "messages": [{"role": "user", "content": "ping"}],
-                "max_tokens": 4,
-            },
-            timeout=3.0,
+        cfg = json.loads(path.read_text())
+    except ValueError as exc:
+        r.fail(f"Model manifest: models/active.json is not valid JSON — {exc}")
+        return
+    missing = [k for k in ("model", "repo_id", "primary_model", "compare_model") if not cfg.get(k)]
+    if missing:
+        r.fail(f"Model manifest: models/active.json lacks {missing} — re-run `make setup`")
+        return
+    r.ok(f"Model manifest: {cfg['model']} ({cfg.get('primary_quant')} + {cfg.get('compare_quant')})")
+
+    # Weights are gitignored, so their absence is not a submission problem.
+    for key in ("primary_model", "compare_model"):
+        p = labkit.repo_root() / cfg[key]
+        if not p.exists():
+            r.note(f"{cfg[key]} not on this machine (fine — weights are gitignored)")
+
+
+def check_reflection(r: Report) -> None:
+    path = labkit.repo_root() / "submission" / "REFLECTION.md"
+    if not path.exists():
+        r.fail("Reflection: submission/REFLECTION.md is missing")
+        return
+    text = path.read_text()
+    left = [
+        p for p in TEMPLATE_MARKERS
+        if re.search(p, text, re.MULTILINE if p.startswith("^") else 0)
+    ]
+    if left:
+        r.fail(
+            f"Reflection: submission/REFLECTION.md still has {len(left)} template "
+            f"placeholder(s) — fill in your own numbers and answers"
         )
-        if r.status_code == 200:
-            print("  ✓ llama-server reachable on :8080 — serving OpenAI-compat OK")
-        else:
-            problems.append(
-                f"WARN     llama-server on :8080 returned {r.status_code} — "
-                f"check it before recording load-test screenshots"
-            )
-    except Exception:
-        # Server not running — that's fine, students may run verify before starting it.
-        pass
+        return
+    words = len(text.split())
+    if words < 400:
+        r.fail(f"Reflection: only {words} words — sections 3, 4 and 5 need real content")
+        return
+    r.ok(f"Reflection: submission/REFLECTION.md filled in ({words} words)")
+
+
+def check_screenshots(r: Report) -> None:
+    folder = labkit.repo_root() / "submission" / "screenshots"
+    if not folder.exists():
+        r.fail("Screenshots: submission/screenshots/ is missing")
+        return
+    imgs = [p for p in folder.iterdir() if p.suffix.lower() in {".png", ".jpg", ".jpeg"}]
+    if len(imgs) < MIN_SCREENSHOTS:
+        r.fail(
+            f"Screenshots: {len(imgs)} of {MIN_SCREENSHOTS} required — "
+            f"see submission/screenshots/README.md"
+        )
+        return
+    r.ok(f"Screenshots: {len(imgs)} image(s)")
+
+
+def check_runtime(r: Report) -> None:
+    """Informational: the grader will not have these, and does not need them."""
+    server = labkit.runtime_bin("llama-server", required=False)
+    if server:
+        r.ok(f"Runtime: llama-server present ({labkit.LLAMA_CPP_BUILD})")
+    else:
+        r.note("llama-server not on this machine (fine — runtime/ is gitignored)")
 
 
 def main() -> int:
-    repo = Path(__file__).resolve().parent.parent
-    problems: list[str] = []
+    r = Report()
+    root = labkit.repo_root()
+    print(f"==> Verifying submission readiness in {root}\n")
 
-    print(f"==> Verifying submission readiness at {repo}\n")
+    print("Setup (00)")
+    need_file(r, root / "hardware.json", "Hardware probe", "make probe")
+    check_manifest(r)
+    check_runtime(r)
 
-    # 00-setup artifacts
-    check_file(repo / "hardware.json", "hardware.json", problems)
-    check_active_model(repo / "models" / "active.json", problems)
+    print("\nMeasure (01)")
+    need_file(r, root / "benchmarks" / "01-quickstart-results.md",
+              "Latency baseline", "make bench")
+    any_file(r, ["benchmarks/01-tuning-*.md"], "Tuning sweep", "make tune")
 
-    # Track 01
-    check_file(
-        repo / "benchmarks" / "01-quickstart-results.md",
-        "Track 01 results (run `make bench`)",
-        problems,
-    )
+    print("\nServe (02)")
+    need_file(r, root / "benchmarks" / "02-server-results.md",
+              "Load test + saturation reading", "make load-10 && make load-50 && make load-report")
+    any_file(r, ["benchmarks/02-server-batching*.md", "benchmarks/02-server-metrics*.csv"],
+             "Continuous-batching evidence", "make metrics (while make load-50 runs)")
 
-    # Track 02 — at least one of the two evidences should exist
-    server_evidence = (
-        (repo / "benchmarks" / "02-server-metrics.csv").exists()
-        or (repo / "benchmarks" / "02-server-results.md").exists()
-    )
-    if not server_evidence:
-        problems.append(
-            "MISSING  Track 02 evidence — neither benchmarks/02-server-metrics.csv "
-            "nor benchmarks/02-server-results.md exists. Run a locust load + record-metrics."
-        )
-
-    # Submission artifacts
-    check_reflection_edited(repo / "submission" / "REFLECTION.md", problems)
-    n_shots = check_screenshots(repo / "submission" / "screenshots", min_count=6, problems=problems)
-    if n_shots:
-        print(f"  ✓ submission/screenshots/ has {n_shots} image(s)")
-
-    # Optional: server health
-    maybe_check_server(problems)
+    print("\nSubmission")
+    check_reflection(r)
+    check_screenshots(r)
 
     print()
-    if not problems:
-        print("✓ All checks passed. Push your repo (public!) and paste the URL into LMS.")
-        return 0
+    if r.problems:
+        print(f"✗ Not ready — {len(r.problems)} item(s) to fix:\n")
+        for p in r.problems:
+            print(f"  - {p}")
+        print("\nSee rubric.md for what each item is worth. Re-run `make verify` when fixed.")
+        return 1
 
-    print("✗ Submission not ready yet:\n")
-    for line in problems:
-        print(f"  - {line}")
-    print(
-        "\nFix the items above and rerun `make verify`. See rubric.md for full grading details."
-    )
-    return 1
+    print("✓ All checks passed.")
+    if r.notes:
+        print(f"  ({len(r.notes)} informational note(s) above — none block submission.)")
+    print("\n  Next: commit, push to a PUBLIC GitHub repo, paste the URL into the LMS.")
+    return 0
 
 
 if __name__ == "__main__":

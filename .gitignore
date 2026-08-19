@@ -1,19 +1,30 @@
-# Lab artifacts
+# ── Environment ──────────────────────────────────────────────
 .venv/
 __pycache__/
 *.pyc
 .env
 .DS_Store
 
-# Models — large, downloaded from Hugging Face. Manifest is committed.
+# ── Model weights: large, re-downloadable. The manifest IS committed. ──
 models/*
 !models/active.json
 
-# llama.cpp source build (bonus track) — heavy, not needed by grader
-BONUS-llama-cpp-optimization/llama.cpp/
+# ── llama.cpp binaries: prebuilt (runtime/) and source build (bonus/). ──
+# Both are re-fetchable via `make setup` / `make build-llama`. The grader
+# does not need them, and `make verify` never asks for them.
+runtime/
+bonus/llama.cpp/
 
-# Locust raw CSV — screenshot is the evidence, not the CSV
-locust_*.csv
+# ── Locust raw CSVs: load-report.py reads them, but only the generated
+#    markdown + your screenshots are evidence. Keep the stats file so
+#    `make load-report` is reproducible; drop the noisy per-request history.
+benchmarks/locust-*_stats_history.csv
+benchmarks/locust-*_failures.csv
+benchmarks/locust-*_exceptions.csv
 
-# NOTE: hardware.json AND benchmarks/*.md / *.json files are TRACKED on purpose.
-# They are the evidence the rubric grades against. See rubric.md.
+# ── TRACKED ON PURPOSE (do not add these) ────────────────────
+#   hardware.json                    rubric item 1
+#   models/active.json               rubric item 2
+#   benchmarks/*.md, *.json          rubric items 3, 4, 8, 9 + bonus
+#   benchmarks/locust-*_stats.csv    input to `make load-report`
+#   submission/**                    your report + screenshots

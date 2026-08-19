@@ -1,8 +1,10 @@
-# Reflection — Lab 20 (Personal Report)
+# Reflection — Day 20 Lab (Personal Report)
 
-> **Đây là báo cáo cá nhân.** Mỗi học viên chạy lab trên laptop của mình, với spec của mình. Số liệu của bạn không so sánh được với bạn cùng lớp — chỉ so sánh **before vs after trên chính máy bạn**. Grade rubric tính theo độ rõ ràng của setup + tuning của bạn, không phải tốc độ tuyệt đối.
-
----
+> **Đây là báo cáo cá nhân.** Số liệu của bạn **không** so sánh được với bạn cùng lớp
+> — chỉ so **before vs after trên chính máy bạn**. Rubric chấm độ rõ ràng của setup,
+> đo lường và **lập luận**, không chấm tốc độ tuyệt đối.
+>
+> `make verify` sẽ fail nếu còn placeholder chưa điền. Đó là cố ý.
 
 **Họ Tên:** _<Họ Tên>_
 **Cohort:** _<A20-K1 / A20-K2 / ...>_
@@ -10,114 +12,166 @@
 
 ---
 
-## 1. Hardware spec (từ `00-setup/detect-hardware.py`)
+## 1. Hardware & runtime  *(rubric 1, 2 — 10 pts)*
 
-> Paste output của `python 00-setup/detect-hardware.py` vào đây, hoặc điền thủ công:
+> Từ `make probe`. Paste output hoặc điền tay.
 
 - **OS:** _<macOS 14 / Windows 11 / Ubuntu 24.04 / ...>_
-- **CPU:** _<Apple M2 / Intel i7-12700H / AMD Ryzen 7 5800H / ...>_
+- **CPU:** _<Apple M2 / Intel i7-12700H / AMD Ryzen 7 5800H>_
 - **Cores:** _<physical / logical>_
 - **CPU extensions:** _<AVX2 / AVX-512 / NEON / —>_
 - **RAM:** _<GB>_
-- **Accelerator:** _<NVIDIA RTX 4060 8GB / Apple Metal / AMD ROCm / Vulkan / CPU only>_
-- **llama.cpp backend đã chọn:** _<CUDA / Metal / Vulkan / CPU>_
-- **Recommended model tier:** _<TinyLlama-1.1B / Qwen2.5-1.5B / Llama-3.2-3B / Qwen2.5-7B>_
+- **Accelerator:** _<NVIDIA RTX 4060 / Apple Metal / Vulkan / CPU only>_
+- **llama.cpp asset đã tải:** _<vd: llama-b10488-bin-macos-arm64.tar.gz>_
+- **Model:** `gemma-4-E2B-it` — `UD-Q4_K_XL` (primary) + `UD-Q2_K_XL` (compare)
 
-**Setup story** (≤ 80 chữ): những gì cần thay đổi để lab chạy được trên máy bạn (vd: dùng WSL2, install CUDA Toolkit, fall back sang Vulkan vì ROCm phiên bản kén, tắt antivirus để pip install nhanh hơn, v.v.):
+**Chạy ở đâu:** _<laptop của tôi / Colab / Kaggle>_
+_(Nếu dùng cloud fallback: nói rõ vì sao — RAM < 8 GB, setup fail, v.v. Không mất điểm.)_
 
-_Answer here._
-
----
-
-## 2. Track 01 — Quickstart numbers (từ `benchmarks/01-quickstart-results.md`)
-
-> Paste bảng từ `benchmarks/01-quickstart-results.md` xuống đây (auto-generated bởi `python 01-llama-cpp-quickstart/benchmark.py`).
-
-| Model | Load (ms) | TTFT P50/P95 (ms) | TPOT P50/P95 (ms) | E2E P50/P95/P99 (ms) | Decode rate (tok/s) |
-|---|--:|--:|--:|--:|--:|
-| (Q4_K_M) | | | | | |
-| (Q2_K)   | | | | | |
-
-**Một quan sát** (≤ 50 chữ): Q4_K_M vs Q2_K trên máy bạn — số liệu nói gì? Quality đáng đánh đổi không?
+**Setup story** (≤ 80 chữ): điều gì cần thay đổi để lab chạy trên máy bạn? Có bước
+nào fail rồi phải workaround không?
 
 _Answer here._
 
 ---
 
-## 3. Track 02 — llama-server load test
+## 2. Đo lường  *(rubric 3, 4 — 15 pts)*
 
-> Chạy 2 lần locust ở concurrency 10 và 50, paste tóm tắt bên dưới.
+> Paste bảng từ `benchmarks/01-quickstart-results.md` (`make bench` tự sinh).
 
-| Concurrency | Total RPS | TTFB P50 (ms) | E2E P95 (ms) | E2E P99 (ms) | Failures |
-|--:|--:|--:|--:|--:|--:|
-| 10 | | | | | |
-| 50 | | | | | |
+| Quantization | Size (GB) | Load (ms) | TTFT P50/P95 (ms) | TPOT P50/P95 (ms) | E2E P50/P95/P99 (ms) | Decode (tok/s) |
+|---|--:|--:|--:|--:|--:|--:|
+| UD-Q4_K_XL | | | | | | |
+| UD-Q2_K_XL | | | | | | |
 
-**Batching observation** (từ `record-metrics.py`): peak `llamacpp:n_busy_slots_per_decode` / `requests_processing` ở concurrency 50 = _<…>_, nghĩa là …
+**Quan sát** (≤ 60 chữ): 2-bit nhanh hơn bao nhiêu, và **có đáng không**? Bạn đã thử
+hỏi cùng một câu trên cả hai (`make serve` vs `python labs/02-serve/serve.py --compare`)
+chưa? Chất lượng khác nhau thế nào?
 
 _Answer here._
 
 ---
 
-## 4. Track 03 — Milestone integration
+## 3. Serving under load  *(rubric 7, 8, 9 — 20 pts)*
 
-- **N16 (Cloud/IaC):** _<piece you connected — k3d cluster / GCP project / docker-compose / "stub: localhost only">_
-- **N17 (Data pipeline):** _<piece — Airflow DAG / batch job / "stub: in-memory dict">_
-- **N18 (Lakehouse):** _<piece — Delta Lake table / Iceberg / "stub: SQLite">_
-- **N19 (Vector + Feature Store):** _<piece — Qdrant index / Feast / "stub: TOY_DOCS">_
+> Từ `benchmarks/02-server-results.md` (`make load-report`).
 
-**Nơi tốn nhiều ms nhất** trong pipeline (đo bằng `time.perf_counter` trong `pipeline.py`):
+| Users | RPS | P50 (ms) | P95 (ms) | P99 (ms) | Eff. concurrency | Failures |
+|--:|--:|--:|--:|--:|--:|--:|
+| 10 | | | | | | |
+| 50 | | | | | | |
+
+- **Offered load tăng 5×, throughput thực tăng:** _<X.XX>×_
+- **P95 tăng:** _<X.XX>×_
+- **Effective concurrency ở 50 users:** _<số>_ so với `--parallel` = _<số>_ slots
+
+**Peak `llamacpp:n_busy_slots_per_decode`** (từ `make metrics` khi `make load-50` đang
+chạy): _<số>_ / _<slots>_ slots
+
+**Saturation reading** (≤ 80 chữ): server của bạn bão hoà ở đâu, và **bằng chứng nào**
+thuyết phục bạn? Nếu P95 tăng nhanh hơn RPS thì phần latency thêm đó là queue time hay
+compute time — bạn biết bằng cách nào? Nếu bạn phải nâng goodput@SLO, bạn sẽ đổi knob
+nào **trước**, và vì sao knob đó?
+
+_Answer here._
+
+---
+
+## 4. Integration  *(rubric 10, 11 — 15 pts)*
+
+> Từ `make pipeline`. Nói thật cái nào real, cái nào stub — stub **không** mất điểm.
+
+| Day | Piece | Real hay stub? |
+|---|---|---|
+| N16 Cloud/IaC | | |
+| N17 Data pipeline | | |
+| N18 Lakehouse | | |
+| N19 Vector + features | | |
+| N20 Serving | `llama-server` | real |
+
+**Latency split** (mean của 3 query, từ output của `pipeline.py`):
 
 - embed: _<ms>_
 - retrieve: _<ms>_
-- llama-server: _<ms>_
+- llm: _<ms>_
+- **stage chiếm nhiều nhất:** _<stage>_ (_<%>_ của total)
 
-**Reflection** (≤ 60 chữ): bottleneck nằm ở đâu? Có khớp với kỳ vọng không?
-
-_Answer here._
-
----
-
-## 5. Bonus — The single change that mattered most
-
-> **Most important section.** Pick **một** thay đổi từ bonus track (build flag, thread sweep, quant pick, GPU offload, KV-cache quantization, speculative decoding, bất cứ challenge nào trong `BONUS-llama-cpp-optimization/CHALLENGES.md`) đã tạo ra speedup lớn nhất trên máy bạn.
-
-**Change:** _<vd: rebuild llama.cpp với `-DGGML_NATIVE=ON -DGGML_BLAS=ON`; vd: hạ `-t` từ 12 xuống 6; vd: bật Metal trên M2>_
-
-**Before vs after** (paste 2-3 dòng từ sweep output):
-
-```
-before: <số liệu>
-after:  <số liệu>
-speedup: ~<X.Y>×
-```
-
-**Tại sao nó work** (1–2 đoạn ngắn — đây là phần grader đọc kỹ nhất):
-
-_Giải thích như đang nói với một bạn cùng lớp đang ngồi cạnh. Tránh "vibes-based" reasoning — bám vào mô hình mental của hardware (memory bandwidth? compute? cache?). Nếu kết quả khác kỳ vọng từ deck, nói rõ — đó là phần grader thưởng điểm._
-
----
-
-## 6. (Optional) Điều ngạc nhiên nhất
-
-_(1–2 câu — không bắt buộc, nhưng người grader đọc tất cả)_
+**Reflection** (≤ 60 chữ): bottleneck ở đâu? Có khớp với kỳ vọng của bạn không? Nếu
+phải giảm latency của pipeline này 2×, bạn sẽ tấn công vào đâu?
 
 _Answer here._
 
 ---
 
-## 7. Self-graded checklist
+## 5. The single change that mattered most  *(rubric 13 — 10 pts)*
 
-- [ ] `hardware.json` đã commit
-- [ ] `models/active.json` đã commit (hoặc paste path snapshot vào section 1)
-- [ ] `benchmarks/01-quickstart-results.md` đã commit
-- [ ] `benchmarks/02-server-results.md` (hoặc CSV từ `record-metrics.py`) đã commit
-- [ ] `benchmarks/bonus-*.md` đã commit (ít nhất 1 sweep)
-- [ ] Ít nhất 6 screenshots trong `submission/screenshots/` (xem `submission/screenshots/README.md`)
-- [ ] `make verify` exit 0 (chạy ngay trước khi push)
-- [ ] Repo trên GitHub ở chế độ **public**
-- [ ] Đã paste public repo URL vào VinUni LMS
+> **Phần quan trọng nhất của report.** Không cần bonus track: `make tune` đã cho bạn
+> một before/after thật (`benchmarks/01-tuning-tg128.md`). Đổi quantization,
+> `LAB_N_CTX`, hay `--parallel` rồi đo lại cũng được.
+
+**Change:** _<vd: hạ -t từ 16 xuống 8; vd: đổi sang UD-Q2_K_XL; vd: --parallel 4 → 8>_
+
+```
+before:  <số + đơn vị>
+after:   <số + đơn vị>
+speedup: <X.Y>×
+```
+
+**Tại sao nó work** (1–2 đoạn — đây là phần grader đọc kỹ nhất):
+
+_Giải thích như đang nói với bạn ngồi cạnh. Bám vào **cơ chế**, không phải "vibes":
+memory bandwidth? vector width? cache residency? scheduling? queueing? Nếu kết quả
+**khác** với kỳ vọng từ deck — nói rõ, và giải thích vì sao. Grader thưởng điểm cho
+lập luận đúng về một kết quả bất ngờ, hơn là một con số đẹp không được giải thích._
+
+_Answer here._
 
 ---
 
-**Quan trọng:** repo phải **public** đến khi điểm được công bố. Nếu private, grader không xem được → 0 điểm.
+## 6. Bonus  *(optional — tối đa 20 pts)*
+
+> Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
+> ăn điểm hơn năm bảng nông.
+
+**Đã làm:** _<B1 build-compare / B2 sweep nào / B4 challenge nào / B5 lựa chọn nào>_
+
+**Numbers:**
+
+```
+before:  <số>
+after:   <số>
+speedup: <X.Y>×
+```
+
+**Điều này nói lên gì mà deck chưa nói:**
+
+_Answer here._
+
+---
+
+## 7. Điều làm bạn ngạc nhiên nhất  *(optional)*
+
+_(1–2 câu. Không bắt buộc, nhưng grader đọc hết.)_
+
+_Answer here._
+
+---
+
+## 8. Self-check trước khi push
+
+- [ ] `hardware.json` committed
+- [ ] `models/active.json` committed
+- [ ] `benchmarks/01-quickstart-results.md` committed (`make bench`)
+- [ ] `benchmarks/01-tuning-tg128.md` committed (`make tune`)
+- [ ] `benchmarks/02-server-results.md` committed (`make load-report`)
+- [ ] `benchmarks/02-server-batching-u50.md` hoặc `-metrics-u50.csv` committed (`make metrics`)
+- [ ] Mọi section **"required — replace this line"** trong các file `benchmarks/*.md`
+      đã được thay bằng nhận xét của bạn
+- [ ] 5 screenshots trong `submission/screenshots/`
+- [ ] `make verify` → **exit 0**
+- [ ] Repo GitHub ở chế độ **public**
+- [ ] Đã paste public URL vào VinUni LMS
+- [ ] **Không** commit `models/*.gguf` hay `runtime/` (đã có trong `.gitignore`)
+
+**Quan trọng:** repo phải **public** đến khi điểm được công bố. Private → grader không
+xem được → 0 điểm.
