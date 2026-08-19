@@ -24,7 +24,7 @@ on *your* hardware, and explain what you found.
 |---|---|---|
 | **B1** | Build from source, compare against the prebuilt binary | `make build-llama && make compare-builds` |
 | **B2** | Run at least one sweep | `make sweep-quant` · `sweep-ctx` · `sweep-batch` · `sweep-gpu` |
-| **B3** | Quantify a bonus-track speedup (before/after) | REFLECTION §5 or §6 |
+| **B3** | Quantify a bonus-track speedup (before/after) | REFLECTION §6 |
 | **B4** | Go deep on one challenge C1–C7 | [`CHALLENGES.md`](CHALLENGES.md) |
 | **B5** | One runtime/regime comparison — **pick any one** | MLX · C8 · C9 · C6 |
 
@@ -108,7 +108,7 @@ starts being a trade-off you have personally measured.
 
 ## How to write it up
 
-In `submission/REFLECTION.md` §5 (or §6 for a second finding):
+In `submission/REFLECTION.md` **§6** (§5 is for your *base-track* change — B3 must be a bonus-track result):
 
 ```
 Change:  <e.g. rebuilt llama.cpp with -DGGML_NATIVE=ON on a CPU with AVX-512>

@@ -11,7 +11,7 @@
 | | Yêu cầu |
 |---|---|
 | RAM | **8 GB** (bắt buộc) |
-| Đĩa trống | ~10 GB (5.6 GB model + 0.5 GB runtime/deps + chỗ thở) |
+| Đĩa trống | ~10 GB (5.2 GB model + ~0.5 GB runtime/deps + chỗ thở) |
 | Python | ≥ 3.10 |
 | GPU | **không cần** |
 | Compiler | **không cần** (chỉ bonus B1 mới cần cmake) |

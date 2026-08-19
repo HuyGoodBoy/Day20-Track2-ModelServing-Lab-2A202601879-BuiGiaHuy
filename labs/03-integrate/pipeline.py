@@ -191,8 +191,41 @@ def main() -> int:
            for k in ("embed", "retrieve", "llm", "total")}
     print(f"\n  Mean over {len(results)} queries (ms): {avg}")
     dominant = max(("embed", "retrieve", "llm"), key=lambda k: avg[k])
-    print(f"  Dominant stage: {dominant} ({100 * avg[dominant] / avg['total']:.0f}% of total)")
-    print("\n  Put these three numbers in REFLECTION.md section 4.")
+    share = 100 * avg[dominant] / avg["total"] if avg["total"] else 0.0
+    print(f"  Dominant stage: {dominant} ({share:.0f}% of total)")
+
+    backend = results[0]["embed_backend"]
+    per_query = labkit.md_table(
+        ["Query", "Contexts retrieved", "embed (ms)", "retrieve (ms)", "llm (ms)", "total (ms)"],
+        [[f"{r['query'][:44]}...", ", ".join(c["id"] for c in r["contexts"]),
+          r["timings_ms"]["embed"], r["timings_ms"]["retrieve"],
+          r["timings_ms"]["llm"], r["timings_ms"]["total"]] for r in results],
+    )
+    md = f"""# 03 - Integrate: RAG pipeline run
+
+Host `{labkit.host_tag()}` · llama.cpp `{labkit.LLAMA_CPP_BUILD}` ·
+retrieval backend: **{backend}** · {len(results)} queries
+
+{per_query}
+
+Mean per stage (ms): embed **{avg['embed']}** · retrieve **{avg['retrieve']}** ·
+llm **{avg['llm']}** · total **{avg['total']}**
+Dominant stage: **{dominant}** ({share:.0f}% of total)
+
+## Answers returned
+
+{chr(10).join(f"**{r['query']}**{chr(10)}{chr(10)}> {r['answer'][:400]}{chr(10)}" for r in results)}
+
+## Which N16-N19 pieces are real (required -- replace this line)
+
+_List each of N16, N17, N18, N19 as real or stubbed. Stubbing costs no points;
+misrepresenting it does. Then answer: is the dominant stage above what you expected?
+If you had to halve this pipeline's latency, which stage would you attack and why?_
+"""
+    out = labkit.write_report("03-integration-results.md", md,
+                              {"backend": backend, "mean_ms": avg, "results": results})
+    print(f"\n==> Wrote {out.relative_to(labkit.repo_root())}")
+    print("  Put these numbers in REFLECTION.md section 4 as well.")
     return 0
 
 

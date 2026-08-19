@@ -17,10 +17,11 @@ P99**, đẩy nó tới điểm bão hoà bằng load test, rồi tune một kno
 | | |
 |---|---|
 | **Model** | **Gemma 4 E2B** (Apache-2.0, Unsloth GGUF) — **một** model cho cả lab |
-| **Runtime** | **llama.cpp prebuilt binary** — tải 10–35 MB, **không compile** |
+| **Runtime** | **llama.cpp prebuilt binary** — tải 11–33 MB (bản Windows CUDA 140–240 MB), **không compile** |
 | **Cần** | Python ≥ 3.10 · **8 GB RAM** · ~10 GB đĩa |
 | **Không cần** | GPU · compiler · Docker · API key · tài khoản trả phí |
 | **OS** | Windows · macOS (Intel + Apple Silicon) · Linux |
+| **Windows** | Không có `make` → dùng **`.\lab.ps1 <target>`** (tên target giống hệt) |
 | **RAM < 8 GB?** | Dùng [`cloud/`](cloud/README.md) — Colab/Kaggle, **điểm không đổi** |
 
 > **Số liệu của bạn không so sánh được với bạn cùng lớp.** Chỉ so **before vs after trên

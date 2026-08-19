@@ -25,6 +25,6 @@ benchmarks/locust-*_exceptions.csv
 # ── TRACKED ON PURPOSE (do not add these) ────────────────────
 #   hardware.json                    rubric item 1
 #   models/active.json               rubric item 2
-#   benchmarks/*.md, *.json          rubric items 3, 4, 5, 9, 10 + bonus
+#   benchmarks/*.md, *.json          rubric items 3, 4, 5, 9, 10, 12, 13 + bonus
 #   benchmarks/locust-*_stats.csv    input to `make load-report`
 #   submission/**                    your report + screenshots

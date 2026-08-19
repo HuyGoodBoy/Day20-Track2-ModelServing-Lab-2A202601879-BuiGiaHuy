@@ -5,6 +5,16 @@ và **file nào được sinh ra** (file đó chính là điểm).
 
 **Tổng thời gian:** ~2.5 giờ cho base track · +1–2 giờ nếu làm bonus.
 
+> ### 🪟 Windows đọc dòng này trước
+> Windows không có `make`. Dùng **`.\lab.ps1 <target>`** ở mọi chỗ hướng dẫn này viết
+> `make <target>` — tên target giống hệt nhau.
+>
+> ```powershell
+> powershell -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1   # 1 lần duy nhất
+> .\lab.ps1                 # xem toàn bộ target
+> .\lab.ps1 bench           # = make bench
+> ```
+
 ```
 PHASE 0  Setup                 ~20 phút
 PHASE 1  Base track (100 điểm)  ~2 giờ      ← bắt buộc
@@ -93,6 +103,9 @@ python labs/02-serve/serve.py --compare         # hoặc bản 2-bit
 ```
 
 Hỏi cùng một câu ở cả hai, tự đọc câu trả lời rồi kết luận.
+
+> ⚠️ Cả hai server đều mặc định port **8080** — **tắt** server thứ nhất (Ctrl-C) trước khi
+> bật bản `--compare`, hoặc cho nó port khác: `python labs/02-serve/serve.py --compare --port 8090`.
 
 ## Bước 1.2 — Tune: tìm thread count tốt nhất cho máy bạn
 

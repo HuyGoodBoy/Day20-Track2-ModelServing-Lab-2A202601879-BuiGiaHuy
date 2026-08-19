@@ -14,6 +14,7 @@ guessed from chunk counts.
 from __future__ import annotations
 
 import json
+import math
 import pathlib
 import statistics
 import sys
@@ -41,12 +42,16 @@ BENCH_PORT = 8099  # off the main :8080 so a running server is not disturbed
 
 
 def pct(data: list[float], q: float) -> float:
-    """Nearest-rank percentile -- honest for the small n this lab uses."""
+    """Nearest-rank percentile: index = ceil(q/100 * n), 1-based.
+
+    Honest for the small n this lab uses -- no interpolation between samples that
+    were never measured. P50 of 10 values is the 5th smallest.
+    """
     if not data:
         return 0.0
     s = sorted(data)
-    idx = min(len(s) - 1, max(0, int(round(q / 100.0 * len(s) + 0.5)) - 1))
-    return s[idx]
+    idx = max(0, math.ceil(q / 100.0 * len(s)) - 1)
+    return s[min(idx, len(s) - 1)]
 
 
 def one_request(base: str, prompt: str, max_tokens: int, temperature: float) -> dict | None:
@@ -131,6 +136,9 @@ def measure(label: str, model: str, quant: str) -> dict:
 
     if not rows:
         labkit.die(f"No successful requests for {quant}.")
+    if len(rows) < len(PROMPTS):
+        print(f"   !! only {len(rows)}/{len(PROMPTS)} requests succeeded — percentiles are thin.")
+        print("      Check the server log before reporting these numbers.")
 
     ttfts = [r["ttft_ms"] for r in rows]
     tpots = [r["tpot_ms"] for r in rows]
@@ -184,7 +192,8 @@ def main() -> int:
 
 Model `{active['model']}` · host `{labkit.host_tag()}` · llama.cpp `{labkit.LLAMA_CPP_BUILD}`
 Settings: `threads={labkit.threads(hw)}` `ngl={labkit.n_gpu_layers(hw)}` `ctx={labkit.n_ctx()}`
-`max_tokens={labkit.env_int("LAB_MAX_TOKENS", 64)}` · {a['n_requests']} requests per row, warm-up discarded
+`max_tokens={labkit.env_int("LAB_MAX_TOKENS", 64)}` · warm-up discarded
+Completed requests: `{a['quant']}` {a['n_requests']}/{len(PROMPTS)} · `{b['quant']}` {b['n_requests']}/{len(PROMPTS)}
 
 {table}
 

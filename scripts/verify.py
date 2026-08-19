@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "lib"))
@@ -32,6 +33,38 @@ TEMPLATE_MARKERS = [
 UNANSWERED = re.compile(r"required -- replace this line", re.IGNORECASE)
 
 OK, WARN, BAD = "  ✓", "  •", "  ✗"
+
+
+def tracked_files() -> set[str] | None:
+    """Paths git is tracking, or None if this is not a usable git checkout.
+
+    The grader only ever sees committed files, so "exists on disk" is not the
+    question -- "is it in the repo" is.
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(labkit.repo_root()), "ls-files"],
+            capture_output=True, text=True, check=False, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if out.returncode != 0:
+        return None
+    return {line.strip() for line in out.stdout.splitlines() if line.strip()}
+
+
+TRACKED = None  # populated in main()
+
+
+def is_committed(path: pathlib.Path) -> bool | None:
+    """True/False if we know, None if git is unavailable."""
+    if TRACKED is None:
+        return None
+    try:
+        rel = str(path.resolve().relative_to(labkit.repo_root()))
+    except ValueError:
+        return None
+    return rel in TRACKED
 
 
 class Report:
@@ -62,6 +95,9 @@ def need_file(r: Report, path: pathlib.Path, label: str, how: str) -> pathlib.Pa
     if path.suffix == ".md" and UNANSWERED.search(path.read_text()):
         r.fail(f"{label}: {rel} still has an unanswered 'replace this line' section")
         return None
+    if is_committed(path) is False:
+        r.fail(f"{label}: {rel} exists but is NOT committed — `git add` it or the grader cannot see it")
+        return None
     r.ok(f"{label}: {rel}")
     return path
 
@@ -75,6 +111,10 @@ def any_file(r: Report, patterns: list[str], label: str, how: str) -> bool:
     stale = [p for p in hits if p.suffix == ".md" and UNANSWERED.search(p.read_text())]
     if stale and len(stale) == len([p for p in hits if p.suffix == ".md"]):
         r.fail(f"{label}: {stale[0].relative_to(root)} still has an unanswered section")
+        return False
+    uncommitted = [p for p in hits if is_committed(p) is False]
+    if uncommitted and len(uncommitted) == len(hits):
+        r.fail(f"{label}: {uncommitted[0].relative_to(root)} is not committed — `git add` it")
         return False
     r.ok(f"{label}: {', '.join(str(p.relative_to(root)) for p in hits[:3])}")
     return True
@@ -151,9 +191,13 @@ def check_runtime(r: Report) -> None:
 
 
 def main() -> int:
+    global TRACKED
     r = Report()
     root = labkit.repo_root()
+    TRACKED = tracked_files()
     print(f"==> Verifying submission readiness in {root}\n")
+    if TRACKED is None:
+        print("  (git not available — checking files on disk only; make sure you commit them)\n")
 
     print("Setup (00)")
     need_file(r, root / "hardware.json", "Hardware probe", "make probe")
@@ -166,10 +210,17 @@ def main() -> int:
     any_file(r, ["benchmarks/01-tuning-*.md"], "Tuning sweep", "make tune")
 
     print("\nServe (02)")
+    for users in (10, 50):
+        need_file(r, root / "benchmarks" / f"locust-{users}_stats.csv",
+                  f"Load run at {users} users", f"make load-{users}")
     need_file(r, root / "benchmarks" / "02-server-results.md",
-              "Load test + saturation reading", "make load-10 && make load-50 && make load-report")
+              "Saturation reading", "make load-report")
     any_file(r, ["benchmarks/02-server-batching*.md", "benchmarks/02-server-metrics*.csv"],
              "Continuous-batching evidence", "make metrics (while make load-50 runs)")
+
+    print("\nIntegrate (03)")
+    need_file(r, root / "benchmarks" / "03-integration-results.md",
+              "RAG pipeline run", "make pipeline")
 
     print("\nSubmission")
     check_reflection(r)

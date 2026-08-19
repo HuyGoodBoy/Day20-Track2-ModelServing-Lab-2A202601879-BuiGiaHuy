@@ -34,13 +34,19 @@ def main() -> int:
         print("     this machine is cloud/Day20-lab.ipynb (Colab / Kaggle).")
 
     step("2/3  Fetching the llama.cpp runtime", "fetch-runtime.py")
-    step("3/3  Downloading Gemma 4 E2B (two quantizations, ~5.6 GB)", "download-model.py")
+    step("3/3  Downloading Gemma 4 E2B (two quantizations, ~5.2 GB)", "download-model.py")
 
     labkit.banner("Setup complete")
+    win = sys.platform == "win32"
+    run = ".\\lab.ps1" if win else "make"
     print("  Next:")
-    print("    make bench      # track 01 - TTFT / TPOT / percentiles, both quants")
-    print("    make tune       # track 01 - find your best thread count (before/after)")
-    print("    make serve      # track 02 - OpenAI-compatible server + /metrics on :8080")
+    print(f"    {run} bench      # track 01 - TTFT / TPOT / percentiles, both quants")
+    print(f"    {run} tune       # track 01 - find your best thread count (before/after)")
+    print(f"    {run} serve      # track 02 - OpenAI-compatible server + /metrics on :8080")
+    print()
+    print("  Full walkthrough: GUIDE.md")
+    if win:
+        print("  (On Windows use .\\lab.ps1 <target> everywhere GUIDE.md says `make <target>`.)")
     print()
     return 0
 

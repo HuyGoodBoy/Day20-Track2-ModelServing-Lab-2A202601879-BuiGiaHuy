@@ -36,13 +36,20 @@ ALL_ACCEL = ("cuda", "vulkan", "rocm", "hip", "sycl", "openvino", "cann", "musa"
 NEVER = ("sycl", "openvino", "cann", "musa", "musl", "opencl", "adreno", "android", "s390x")
 
 # Fallback if the GitHub API is rate-limited (a whole classroom shares one NAT).
+# Keyed by (os_token, arch_token, accel). Covers every platform HARDWARE-GUIDE.md
+# promises, so a rate-limited classroom is never told to go compile instead.
 FALLBACK_ASSETS = {
-    ("darwin", "arm64", "plain"): f"llama-{BUILD}-bin-macos-arm64.tar.gz",
-    ("linux", "x86_64", "plain"): f"llama-{BUILD}-bin-ubuntu-x64.tar.gz",
-    ("linux", "x86_64", "vulkan"): f"llama-{BUILD}-bin-ubuntu-vulkan-x64.tar.gz",
-    ("windows", "amd64", "plain"): f"llama-{BUILD}-bin-win-cpu-x64.zip",
-    ("windows", "amd64", "vulkan"): f"llama-{BUILD}-bin-win-vulkan-x64.zip",
-    ("windows", "amd64", "cuda"): f"llama-{BUILD}-bin-win-cuda-12.4-x64.zip",
+    ("-macos-", "arm64", "plain"): f"llama-{BUILD}-bin-macos-arm64.tar.gz",
+    ("-macos-", "x64", "plain"): f"llama-{BUILD}-bin-macos-x64.tar.gz",
+    ("-ubuntu-", "x64", "plain"): f"llama-{BUILD}-bin-ubuntu-x64.tar.gz",
+    ("-ubuntu-", "x64", "vulkan"): f"llama-{BUILD}-bin-ubuntu-vulkan-x64.tar.gz",
+    ("-ubuntu-", "arm64", "plain"): f"llama-{BUILD}-bin-ubuntu-arm64.tar.gz",
+    ("-ubuntu-", "arm64", "vulkan"): f"llama-{BUILD}-bin-ubuntu-vulkan-arm64.tar.gz",
+    ("-win-", "x64", "plain"): f"llama-{BUILD}-bin-win-cpu-x64.zip",
+    ("-win-", "x64", "vulkan"): f"llama-{BUILD}-bin-win-vulkan-x64.zip",
+    ("-win-", "x64", "cuda"): f"llama-{BUILD}-bin-win-cuda-12.4-x64.zip",
+    ("-win-", "x64", "rocm"): f"llama-{BUILD}-bin-win-rocm-7.14-x64.zip",
+    ("-win-", "arm64", "plain"): f"llama-{BUILD}-bin-win-cpu-arm64.zip",
 }
 
 
@@ -145,7 +152,11 @@ def pick_asset(assets: list[str], token: str, prefs: list[str]) -> str | None:
                     usable = [a for v, a in versioned if v <= driver]
                     if usable:
                         return usable[-1]
-                    print(f"    (no CUDA build <= driver {driver[0]}.{driver[1]}; taking the oldest)")
+                    # An asset newer than the driver will not load. Skip CUDA entirely
+                    # and let the next preference (Vulkan, then CPU) win.
+                    print(f"    (no CUDA build works with driver {driver[0]}.{driver[1]} -- "
+                          f"falling back to the next backend)")
+                    continue
                 return versioned[0][1]
         return sorted(matches, key=len)[0]
     return None
@@ -227,13 +238,17 @@ def main() -> int:
     prefs = accel_preference(hw)
     print(f"==> Target: {token[0].strip('-')} {token[1]}, accelerator preference {prefs}")
 
-    asset = args.asset or pick_asset(assets, token, prefs) if assets else None
-    if not asset and not args.asset:
-        key = (platform.system().lower(), platform.machine().lower(), prefs[0])
-        asset = FALLBACK_ASSETS.get(key) or FALLBACK_ASSETS.get(
-            (platform.system().lower(), platform.machine().lower(), "plain")
-        )
-    asset = args.asset or asset
+    asset = args.asset
+    if not asset and assets:
+        asset = pick_asset(assets, token, prefs)
+    if not asset:
+        # GitHub API unavailable (rate limit) -- fall back to the name table, trying
+        # each accelerator preference in order before settling for the CPU build.
+        for pref in prefs + ["plain"]:
+            asset = FALLBACK_ASSETS.get((token[0], token[1], pref))
+            if asset:
+                print(f"    (using the built-in name table: {pref})")
+                break
     if not asset:
         labkit.die(
             f"No prebuilt asset matches {token[0].strip('-')} {token[1]}.",

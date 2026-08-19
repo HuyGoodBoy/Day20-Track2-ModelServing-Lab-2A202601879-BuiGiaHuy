@@ -145,7 +145,7 @@ speedup: <X.Y>×
 
 **Điều này nói lên gì mà deck chưa nói:**
 
-_Answer here._
+_(để trống nếu bạn không làm phần này)_
 
 ---
 
@@ -153,7 +153,7 @@ _Answer here._
 
 _(1–2 câu. Không bắt buộc, nhưng grader đọc hết.)_
 
-_Answer here._
+_(để trống nếu bạn không làm phần này)_
 
 ---
 

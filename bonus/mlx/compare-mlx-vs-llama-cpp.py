@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import pathlib
 import platform
 import statistics
@@ -53,10 +54,11 @@ PORT = 8098
 
 
 def pctl(xs: list[float], q: float) -> float:
+    """Nearest-rank percentile: index = ceil(q/100 * n), 1-based."""
     if not xs:
         return 0.0
     s = sorted(xs)
-    return s[min(len(s) - 1, max(0, int(round(q / 100.0 * len(s) + 0.5)) - 1))]
+    return s[min(len(s) - 1, max(0, math.ceil(q / 100.0 * len(s)) - 1))]
 
 
 def bench_llama_cpp(model: str) -> dict:

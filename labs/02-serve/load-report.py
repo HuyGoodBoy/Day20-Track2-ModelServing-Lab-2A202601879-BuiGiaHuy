@@ -110,9 +110,9 @@ def main() -> int:
             verdict = "**Saturated.**"
             because = (
                 f"Throughput delivered only {rps_ratio:.2f}x for {user_ratio:.0f}x the offered "
-                f"load, and effective concurrency ({conc:.1f}) has pinned all {slots} decode "
-                f"slots. The server was already at capacity at {u1} users; everything you added "
-                f"at {u2} became queue time."
+                f"load, and effective concurrency ({conc:.1f}) is at or above all {slots} decode "
+                f"slots. Saturation sets in somewhere at or below {u2} users; the load you added "
+                f"beyond that point became queue time rather than throughput."
             )
         elif flat_throughput:
             verdict = "**Saturated.**"
@@ -141,7 +141,8 @@ def main() -> int:
             f"Throughput moved {rps_ratio:.2f}x while P95 moved {p95_ratio:.2f}x. That gap is the "
             f"goodput argument: past saturation you buy throughput by spending latency, and if "
             f"your SLO is a P95 target then the requests you added are no longer being served "
-            f"within it."
+            f"within it. (This lab does not fix an SLO number for you -- pick one in your "
+            f"write-up and state how much goodput you keep at it.)"
             if p95_ratio > rps_ratio else
             f"P95 grew no faster than throughput ({p95_ratio:.2f}x vs {rps_ratio:.2f}x), so this "
             f"server still has headroom at {u2} users."
@@ -155,7 +156,7 @@ def main() -> int:
 | Offered load | {user_ratio:.0f}x |
 | Throughput actually delivered | **{rps_ratio:.2f}x** ({efficiency * 100:.0f}% of linear) |
 | P95 latency | **{p95_ratio:.2f}x** |
-| Effective concurrency at {u2} users | {conc:.1f} vs `--parallel {slots}` slots ({slot_util * 100:.0f}% utilised) |
+| Effective concurrency at {u2} users | {conc:.1f} vs `--parallel {slots}` slots (occupancy/slot ratio {slot_util:.2f}) |
 
 {verdict} {because}
 
@@ -178,8 +179,10 @@ Host `{labkit.host_tag()}` · llama.cpp `{labkit.LLAMA_CPP_BUILD}` ·
 
 {table}
 
-*Effective concurrency = RPS x average latency (Little's Law) -- how many requests
-were really in flight, regardless of how many users locust simulated.*
+*Effective concurrency = RPS x average latency (Little's Law) -- how many requests were
+really in flight, regardless of how many users locust simulated. It counts queued requests
+too, so the occupancy/slot ratio can legitimately exceed 1.0; it is occupancy, not
+utilisation. For true slot utilisation use the server's own gauges (`make metrics`).*
 {analysis}
 ## Your reading (required -- replace this line)
 

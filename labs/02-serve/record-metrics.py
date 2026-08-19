@@ -114,14 +114,14 @@ Host `{labkit.host_tag()}` · `--parallel {slots}` · {len(rows)} samples over
 {args.duration}s at {args.interval}s intervals · raw CSV: `{csv_path.name}`
 
 {labkit.md_table(["Gauge", "Peak observed"], [
-    ["`n_busy_slots_per_decode`", f"{busy_peak:.2f} of {slots} slots ({util:.0f}%)"],
+    ["`n_busy_slots_per_decode` (avg/decode)", f"{busy_peak:.2f} of {slots} slots ({util:.0f}%)"],
     ["`requests_processing`", f"{peak('llamacpp:requests_processing'):.0f}"],
     ["`requests_deferred`", f"{peak('llamacpp:requests_deferred'):.0f}"],
     ["`kv_cache_usage_ratio`", f"{peak('llamacpp:kv_cache_usage_ratio'):.2f}"],
     ["`tokens_predicted_total` (final)", f"{rows[-1].get('llamacpp:tokens_predicted_total', 0):.0f}"],
 ])}
 
-Peak batch width reached **{busy_peak:.2f} of {slots}** slots. A peak near 1 means
+Highest sampled value was **{busy_peak:.2f} of {slots}** slots. Note this gauge is llama.cpp's *average* busy slots per decode step, so the number below is the highest average we sampled, not an instantaneous maximum batch width. A peak near 1 means
 requests were served one at a time -- either the load was too light to overlap, or
 they arrived too far apart. A peak approaching `--parallel` means the scheduler was
 genuinely packing concurrent requests into shared decode steps.
@@ -135,7 +135,7 @@ _What was the peak batch width, and does it match the effective concurrency in
     out = labkit.write_report(f"02-server-batching{suffix}.md", md)
     print(f"\n==> Wrote {csv_path.relative_to(labkit.repo_root())}")
     print(f"==> Wrote {out.relative_to(labkit.repo_root())}")
-    print(f"\n  Peak n_busy_slots_per_decode = {busy_peak:.2f} of {slots} slots")
+    print(f"\n  Highest sampled n_busy_slots_per_decode = {busy_peak:.2f} of {slots} slots")
     return 0
 
 

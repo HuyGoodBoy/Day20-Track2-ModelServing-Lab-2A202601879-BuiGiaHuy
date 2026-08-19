@@ -68,12 +68,12 @@ serve-embed: venv-check ## Start an embedding server on :8081 (bonus C9)
 smoke: venv-check ## Prove /v1/chat/completions + non-zero /metrics (rubric 6 + 7)
 	@$(PY) labs/02-serve/smoke-test.py
 
-load-10: venv-check ## Load test: 10 users, 60s
-	@$(LOCUST) -f labs/02-serve/load-test.py --headless -u 10 -r 1 -t 1m \
+load-10: venv-check ## Load test: 10 users, 60s (ramps in 2s)
+	@$(LOCUST) -f labs/02-serve/load-test.py --headless -u 10 -r 5 -t 1m \
 	    --host http://localhost:8080 --csv benchmarks/locust-10 --csv-full-history
 
-load-50: venv-check ## Load test: 50 users, 60s
-	@$(LOCUST) -f labs/02-serve/load-test.py --headless -u 50 -r 1 -t 1m \
+load-50: venv-check ## Load test: 50 users, 60s (ramps in 2s)
+	@$(LOCUST) -f labs/02-serve/load-test.py --headless -u 50 -r 25 -t 1m \
 	    --host http://localhost:8080 --csv benchmarks/locust-50 --csv-full-history
 
 load-report: venv-check ## Turn both load runs into the saturation reading
@@ -93,8 +93,10 @@ pipeline: venv-check ## RAG pipeline -> llama-server (server must be up)
 ## --- Submission
 # ─────────────────────────────────────────────────────────────
 
-verify: venv-check ## Check submission readiness (run before you push)
-	@$(PY) scripts/verify.py
+# No venv-check on purpose: the GRADER runs this on a fresh clone with no setup.
+# verify.py is stdlib-only for exactly that reason.
+verify: ## Check submission readiness (run before you push)
+	@$(SYSPY) scripts/verify.py
 
 # ─────────────────────────────────────────────────────────────
 ## --- Bonus (optional, +20 pts)
@@ -135,11 +137,17 @@ sweep-gpu: venv-check ## B2 - -ngl GPU offload (needs CUDA/Metal/Vulkan/ROCm)
 mlx-compare: venv-check ## B5 - MLX vs llama.cpp Metal (Apple Silicon only)
 	@$(PY) bonus/mlx/compare-mlx-vs-llama-cpp.py
 
-embed-demo: venv-check ## B5/C9 - embedding serving regime (--offline works serverless)
+embed-demo: venv-check ## B5/C9 - embedding serving regime (needs make serve-embed)
 	@$(PY) bonus/serving-regimes/embedding-serving.py
 
-semantic-cache: venv-check ## B5/C8 - semantic cache above the KV cache
+embed-demo-offline: venv-check ## B5/C9 - same demo with no server (synthetic vectors)
+	@$(PY) bonus/serving-regimes/embedding-serving.py --offline
+
+semantic-cache: venv-check ## B5/C8 - semantic cache (needs serve + serve-embed)
 	@$(PY) bonus/serving-regimes/semantic-cache-demo.py
+
+semantic-cache-offline: venv-check ## B5/C8 - same demo with no servers + threshold sweep
+	@$(PY) bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 
 # ─────────────────────────────────────────────────────────────
 ## --- Housekeeping
@@ -148,6 +156,7 @@ semantic-cache: venv-check ## B5/C8 - semantic cache above the KV cache
 clean: ## Remove generated reports (keeps hardware.json, models, REFLECTION, screenshots)
 	@rm -f benchmarks/01-*.md benchmarks/01-*.json \
 	       benchmarks/02-*.md benchmarks/02-*.json benchmarks/02-*.csv \
+	       benchmarks/03-*.md benchmarks/03-*.json \
 	       benchmarks/locust-*.csv benchmarks/bonus-*.md benchmarks/bonus-*.json
 	@find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
 	@echo "Cleaned generated reports. Kept: hardware.json, models/, runtime/, submission/."
@@ -159,4 +168,5 @@ clean-all: clean ## Also remove the venv, runtime binaries, weights and source b
 .PHONY: help venv-check probe setup runtime bench tune serve serve-embed smoke \
         load-10 load-50 load-report metrics pipeline verify \
         build-llama compare-builds sweep-quant sweep-ctx sweep-batch sweep-gpu \
-        mlx-compare embed-demo semantic-cache clean clean-all
+        mlx-compare embed-demo embed-demo-offline semantic-cache semantic-cache-offline \
+        clean clean-all

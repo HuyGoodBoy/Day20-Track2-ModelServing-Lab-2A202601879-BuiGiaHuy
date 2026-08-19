@@ -33,7 +33,7 @@ both count as one item.
 - **Crop tight.** Full-screen desktop shots get rejected. Show the data, not your wallpaper.
 - Dark or light terminal is fine — just make sure the text is legible when zoomed.
 - For locust, include the `Type · Name · # reqs · Median · 95%ile · 99%ile` row. That row
-  *is* the evidence for items 7 and 8.
+  *is* the evidence for item 8.
 - PNG or JPG. Keep each under ~2 MB so your repo stays quick to clone.
 - Take #3 **after** `make smoke` has actually printed the metrics delta — a screenshot of
   a server sitting idle does not show item 6.
