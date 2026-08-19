@@ -50,7 +50,7 @@ interesting report** — say what happened and reason about why.
 
 ```bash
 LAB_N_THREADS=<winner> make bench     # re-measure with your best setting
-python labs/01-measure/tune.py --metric pp512   # tune prefill instead of decode
+.venv/bin/python labs/01-measure/tune.py --metric pp512   # tune prefill instead of decode
 ```
 
 ## Knobs

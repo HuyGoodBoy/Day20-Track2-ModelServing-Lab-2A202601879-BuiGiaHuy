@@ -3,7 +3,7 @@
 Các sweep là phần khởi động. Những challenge dưới đây có tính mở. **Hãy chọn một.**
 Một bài C5 được giải thích sâu tốt hơn việc làm C1, C2 và C3 ở mức sơ sài.
 
-C1–C7 đáp ứng tiêu chí bonus **B4**. C6, C8 và C9 cũng có thể dùng riêng để đáp ứng
+C1–C7 và C10 đáp ứng tiêu chí bonus **B4**. C6, C8 và C9 cũng có thể dùng riêng để đáp ứng
 **B5**. Xem [`README.md`](README.md). Trước tiên, hãy kiểm tra mọi flag trên binary của
 bạn bằng `llama-server --help | grep <flag>`. llama.cpp thay đổi nhanh và tài liệu này
 được cố định theo build `b10488`.
@@ -21,7 +21,7 @@ Bạn không cần tìm một draft model tương thích tokenizer vì draft kh�
 được phát hành cùng model.
 
 ```bash
-python labs/00-setup/download-model.py --with-mtp     # ~98 MB
+.venv/bin/python labs/00-setup/download-model.py --with-mtp     # ~98 MB
 llama-server --help | grep -iE "draft|mtp|spec"       # find the current flag names
 ```
 
@@ -43,7 +43,7 @@ trên máy của bạn.
 ## C2. Quantization cho KV cache
 
 ```bash
-python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
+.venv/bin/python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
 ```
 
 Đây là cách kiểm tra ý tưởng “FP8 KV cache” trong deck trên CPU, Metal hoặc Vulkan.
@@ -122,7 +122,7 @@ make serve &            # chat       :8080
 make serve-embed &      # embeddings :8081
 make semantic-cache
 # no servers? logic demo + threshold sweep:
-python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
+.venv/bin/python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 ```
 
 **Lab không có embedding model chuyên dụng, nên `make serve-embed` chạy chat model ở
@@ -172,7 +172,7 @@ vẫn có thể chạy trên máy của mình:
 
 ```bash
 # fetch mmproj-F16.gguf from the same repo, then:
-python labs/02-serve/serve.py -- --mmproj models/mmproj-F16.gguf
+.venv/bin/python labs/02-serve/serve.py -- --mmproj models/mmproj-F16.gguf
 ```
 
 Hãy tự thiết kế thí nghiệm. Câu hỏi chính là: một hình ảnh trong prompt thay đổi TTFT và

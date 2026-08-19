@@ -37,7 +37,7 @@ standing in for N18, because my Iceberg setup is not ready" scores full marks.
 
 ```bash
 make serve-embed &                                       # :8081
-python labs/03-integrate/pipeline.py --embed-url http://localhost:8081
+.venv/bin/python labs/03-integrate/pipeline.py --embed-url http://localhost:8081
 ```
 
 Without it, retrieval falls back to keyword overlap and reports `embed: 0.0 ms` —

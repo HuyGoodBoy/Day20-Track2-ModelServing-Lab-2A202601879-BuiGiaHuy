@@ -26,7 +26,7 @@ và câu hỏi bạn muốn trả lời.
 | B1 | Compile llama.cpp cho CPU của bạn và **so với prebuilt binary** | `make build-llama && make compare-builds` | 4 |
 | B2 | Chạy ít nhất 1 sweep | `make sweep-quant` / `sweep-ctx` / `sweep-batch` / `sweep-gpu` | 4 |
 | B3 | Speedup **của bonus track** có before/after rõ ràng | REFLECTION §6 (từ B1 hoặc B2, **không** phải kết quả `make tune` của base) | 4 |
-| B4 | Làm ít nhất 1 challenge C1–C7 | [`bonus/CHALLENGES.md`](CHALLENGES.md) | 4 |
+| B4 | Làm ít nhất 1 challenge C1–C7 hoặc C10 | [`bonus/CHALLENGES.md`](CHALLENGES.md) | 4 |
 | B5 | Một so sánh runtime/regime — **chọn 1**: MLX (Mac) · C8 semantic cache · C9 embedding serving · C6 Vulkan vs CUDA | `make mlx-compare` · `make semantic-cache` · `make embed-demo` | 4 |
 
 **Tổng bonus: 20 điểm.**

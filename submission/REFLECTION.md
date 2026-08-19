@@ -46,7 +46,7 @@ _Answer here._
 | UD-Q2_K_XL | | | | | | |
 
 **Quan sát** (≤ 60 chữ): 2-bit nhanh hơn bao nhiêu, và **có đáng không**? Bạn đã thử
-hỏi cùng một câu trên cả hai (`make serve` vs `python labs/02-serve/serve.py --compare`)
+hỏi cùng một câu trên cả hai (`make serve` vs `.venv/bin/python labs/02-serve/serve.py --compare`)
 chưa? Chất lượng khác nhau thế nào?
 
 _Answer here._
@@ -166,6 +166,8 @@ _(để trống nếu bạn không làm phần này)_
 - [ ] `benchmarks/01-tuning-tg128.md` committed (`make tune`)
 - [ ] `benchmarks/02-server-results.md` committed (`make load-report`)
 - [ ] `benchmarks/02-server-batching-u50.md` hoặc `-metrics-u50.csv` committed (`make metrics`)
+- [ ] `benchmarks/locust-10_stats.csv` + `locust-50_stats.csv` committed (`make load-10` / `load-50`)
+- [ ] `benchmarks/03-integration-results.md` committed (`make pipeline`)
 - [ ] Mọi section **"required — replace this line"** trong các file `benchmarks/*.md`
       đã được thay bằng nhận xét của bạn
 - [ ] 5 screenshots trong `submission/screenshots/`

@@ -78,6 +78,7 @@ switch ($Target) {
         Write-Host ""
         Write-Host "Housekeeping"
         Write-Host "  clean          Remove generated reports"
+        Write-Host "  clean-all      Also remove venv, runtime, models, hardware.json"
         Write-Host ""
         Write-Host "You need 3 windows for the 50-user step: serve / load-50 / metrics." -ForegroundColor Yellow
         Write-Host ""
@@ -142,6 +143,16 @@ switch ($Target) {
             benchmarks\03-*.md, benchmarks\03-*.json,
             benchmarks\locust-*.csv, benchmarks\bonus-*.md, benchmarks\bonus-*.json
         Write-Host "Cleaned generated reports. Kept hardware.json, models\, runtime\, submission\."
+    }
+
+    'clean-all' {
+        Remove-Item -ErrorAction SilentlyContinue benchmarks\01-*.md, benchmarks\01-*.json,
+            benchmarks\02-*.md, benchmarks\02-*.json, benchmarks\02-*.csv,
+            benchmarks\03-*.md, benchmarks\03-*.json,
+            benchmarks\locust-*.csv, benchmarks\bonus-*.md, benchmarks\bonus-*.json
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue .venv, runtime, models,
+            bonus\llama.cpp, hardware.json
+        Write-Host "Removed venv, runtime, models and hardware.json. Re-run: .\lab.ps1 setup"
     }
 
     default {

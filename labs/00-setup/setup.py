@@ -7,6 +7,7 @@ identical on every OS, so it lives here instead of in three shell scripts.
 """
 from __future__ import annotations
 
+import os
 import pathlib
 import subprocess
 import sys
@@ -35,6 +36,11 @@ def main() -> int:
         print("     this machine is cloud/Day20-lab.ipynb (Colab / Kaggle).")
 
     step("2/3  Fetching the llama.cpp runtime", "fetch-runtime.py")
+    # Hand the probe's choice to download-model.py. Without this it resolves
+    # LAB_MODEL -> models/active.json (absent on a fresh setup) -> DEFAULT_MODEL,
+    # so a <8 GB laptop was told "Downloading Qwen3.5 0.8B" and got Gemma's 5.2 GB.
+    if rec.get("model_key"):
+        os.environ.setdefault("LAB_MODEL", rec["model_key"])
     spec = labkit.model_spec(rec.get("model_key"))
     step(f"3/3  Downloading {spec['label']} (two quantizations, ~{spec['download_gb']} GB)",
          "download-model.py")

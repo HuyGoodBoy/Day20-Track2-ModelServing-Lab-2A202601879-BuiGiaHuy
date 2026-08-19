@@ -37,10 +37,10 @@ are gitignored, and `make verify` never asks for them.
 ## Overrides
 
 ```bash
-python labs/00-setup/fetch-runtime.py --list                 # all release assets
-python labs/00-setup/fetch-runtime.py --asset <name> --force # pick one by hand
-python labs/00-setup/download-model.py --with-mtp            # + MTP head (bonus C1)
-python labs/00-setup/download-model.py --skip-download       # manifest only
+.venv/bin/python labs/00-setup/fetch-runtime.py --list                 # all release assets
+.venv/bin/python labs/00-setup/fetch-runtime.py --asset <name> --force # pick one by hand
+.venv/bin/python labs/00-setup/download-model.py --with-mtp            # + MTP head (bonus C1)
+.venv/bin/python labs/00-setup/download-model.py --skip-download       # manifest only
 ```
 
 Runtime knobs live in `.env.example` (`LAB_N_THREADS`, `LAB_N_CTX`, `LAB_PARALLEL`, …).

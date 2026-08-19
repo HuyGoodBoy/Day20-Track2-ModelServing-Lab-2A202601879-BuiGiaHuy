@@ -48,7 +48,7 @@ curl -L -o models/Qwen3.5-0.8B-UD-Q2_K_XL.gguf \
 Rồi ghi manifest với **cùng** `LAB_MODEL` bạn dùng:
 
 ```bash
-LAB_MODEL=qwen35-0.8b python labs/00-setup/download-model.py --skip-download
+LAB_MODEL=qwen35-0.8b .venv/bin/python labs/00-setup/download-model.py --skip-download
 ```
 
 ---
@@ -109,8 +109,8 @@ tìm đệ quy.
 ## Sau khi có file: ghi manifest
 
 ```bash
-python labs/00-setup/download-model.py --skip-download                    # Gemma
-LAB_MODEL=qwen35-0.8b python labs/00-setup/download-model.py --skip-download   # Qwen
+.venv/bin/python labs/00-setup/download-model.py --skip-download                    # Gemma
+LAB_MODEL=qwen35-0.8b .venv/bin/python labs/00-setup/download-model.py --skip-download   # Qwen
 ```
 
 Lệnh này không tải gì, chỉ tìm file và ghi `models/active.json` (rubric item 2). Thêm
@@ -136,7 +136,7 @@ File nhỏ hơn đáng kể = tải dở, xoá và tải lại.
 ## Nếu tên file không khớp
 
 `--skip-download` tìm đúng tên trong bảng trên. Unsloth đôi khi re-upload với nhãn quant
-khác. Khi đó: đổi tên file cho khớp, **hoặc** sửa `MODEL_PRIMARY` / `MODEL_COMPARE` ở đầu
+khác. Khi đó: đổi tên file cho khớp, **hoặc** sửa tuple `primary` / `compare` trong dict `MODELS` ở
 [`lib/labkit.py`](../../lib/labkit.py) và ghi lại việc đó trong REFLECTION §1.
 
 ## Runtime binary cũng bị chặn?
@@ -145,7 +145,7 @@ khác. Khi đó: đổi tên file cho khớp, **hoặc** sửa `MODEL_PRIMARY` /
 GitHub cũng bị chặn:
 
 ```bash
-python labs/00-setup/fetch-runtime.py --list      # in ra tên các asset
+.venv/bin/python labs/00-setup/fetch-runtime.py --list      # in ra tên các asset
 ```
 
 Tải asset đúng platform của bạn từ

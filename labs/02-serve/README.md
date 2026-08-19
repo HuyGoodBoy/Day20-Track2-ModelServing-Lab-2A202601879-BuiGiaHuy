@@ -68,11 +68,11 @@ per decode step:
 Anything after `--` goes straight to `llama-server`:
 
 ```bash
-python labs/02-serve/serve.py -- --parallel 1          # batching off, for contrast
-python labs/02-serve/serve.py -- --parallel 8
-python labs/02-serve/serve.py -- --ctx-size 4096       # watch process RSS grow
-python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0   # bonus C2
-python labs/02-serve/serve.py --compare                # serve the 2-bit quantization
+.venv/bin/python labs/02-serve/serve.py -- --parallel 1          # batching off, for contrast
+.venv/bin/python labs/02-serve/serve.py -- --parallel 8
+.venv/bin/python labs/02-serve/serve.py -- --ctx-size 4096       # watch process RSS grow
+.venv/bin/python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0   # bonus C2
+.venv/bin/python labs/02-serve/serve.py --compare                # serve the 2-bit quantization
 ```
 
 | Flag | Measure this |

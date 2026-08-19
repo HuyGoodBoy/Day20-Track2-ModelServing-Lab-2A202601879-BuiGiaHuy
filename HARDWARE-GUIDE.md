@@ -80,8 +80,8 @@ chọn build cao nhất mà driver chạy được, kèm `cudart` DLLs.
 Ghi đè lựa chọn tự động:
 
 ```bash
-python labs/00-setup/fetch-runtime.py --list                       # xem hết asset
-python labs/00-setup/fetch-runtime.py --asset <tên> --force        # chọn tay
+.venv/bin/python labs/00-setup/fetch-runtime.py --list                       # xem hết asset
+.venv/bin/python labs/00-setup/fetch-runtime.py --asset <tên> --force        # chọn tay
 ```
 
 ## 4. Backend nào cho phần cứng nào

@@ -28,7 +28,18 @@ TEMPLATE_MARKERS = [
     r"<YYYY-MM-DD>",
     r"<macOS 14 / Windows 11",
     r"^_Answer here\._?\s*$",
+    # Any `_<...>_` slot, plus the bare `<số ...>` / `<X.Y>` ones inside §5's code
+    # block. Scanned only over the REQUIRED sections (see REQUIRED_END) so that
+    # leaving the optional bonus section untouched stays legal.
+    r"_<[^>\n]{1,60}>_",
+    r"<số[^>\n]*>",
+    r"<X\.[XY]>",
 ]
+# Sections 1-5 are graded; section 6 onward is optional and may keep its template text.
+REQUIRED_END = "## 6. Bonus"
+# The template alone is ~1050 words, so a floor below that can never fire. Require
+# meaningfully more than the boilerplate the student started from.
+MIN_REFLECTION_WORDS = 1250
 # Every generated report ends with a section the student must replace.
 UNANSWERED = re.compile(r"required -- replace this line", re.IGNORECASE)
 
@@ -149,19 +160,24 @@ def check_reflection(r: Report) -> None:
         r.fail("Reflection: submission/REFLECTION.md is missing")
         return
     text = path.read_text()
-    left = [
-        p for p in TEMPLATE_MARKERS
-        if re.search(p, text, re.MULTILINE if p.startswith("^") else 0)
+    required = text.split(REQUIRED_END)[0]
+    hits = [
+        m.group().strip()
+        for p in TEMPLATE_MARKERS
+        for m in re.finditer(p, required, re.MULTILINE if p.startswith("^") else 0)
     ]
-    if left:
+    if hits:
+        shown = ", ".join(sorted(set(hits))[:3])
         r.fail(
-            f"Reflection: submission/REFLECTION.md still has {len(left)} template "
-            f"placeholder(s) — fill in your own numbers and answers"
+            f"Reflection: submission/REFLECTION.md still has {len(hits)} template "
+            f"placeholder(s) in sections 1-5 (e.g. {shown}) — fill in your own "
+            f"numbers and answers"
         )
         return
     words = len(text.split())
-    if words < 400:
-        r.fail(f"Reflection: only {words} words — sections 3, 4 and 5 need real content")
+    if words < MIN_REFLECTION_WORDS:
+        r.fail(f"Reflection: only {words} words — sections 3, 4 and 5 need real content "
+               f"(the blank template is already ~1050 words)")
         return
     r.ok(f"Reflection: submission/REFLECTION.md filled in ({words} words)")
 

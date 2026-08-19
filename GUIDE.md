@@ -15,6 +15,18 @@ thấy** và **file được sinh ra**. Các file đó là bằng chứng để 
 > .\lab.ps1 bench           # tương đương make bench
 > ```
 
+> ### 🐍 Về các lệnh `python` trong tài liệu
+> Lab **không** dùng `python` toàn cục — mọi thứ chạy trong virtualenv mà `make setup`
+> tạo ra. Vì vậy tài liệu luôn ghi đường dẫn đầy đủ:
+>
+> | OS | Dùng |
+> |---|---|
+> | macOS / Linux | `.venv/bin/python labs/...` |
+> | Windows | `.venv\Scripts\python labs\...` |
+>
+> Trên macOS/Linux, gõ `python` trần thường báo `command not found` (chỉ có `python3`),
+> và kể cả `python3` cũng thiếu package của lab. Luôn dùng `.venv/bin/python`.
+
 ```
 PHASE 0  Setup                 ~20 phút
 PHASE 1  Base track (100 điểm)  ~2 giờ      ← bắt buộc
@@ -44,7 +56,8 @@ Bạn sẽ thấy thông tin về CPU, số core, RAM, accelerator và model dù
 | RAM | Cách làm |
 |---|---|
 | **≥ 8 GB** | Tiếp tục bước 0.2 và 0.3 trên laptop |
-| **< 8 GB** | Dừng tại đây. Mở [`cloud/README.md`](cloud/README.md) và làm trên Colab/Kaggle. **Không mất điểm.** |
+| **4–8 GB** | Vẫn chạy local, chỉ đổi model: `LAB_MODEL=qwen35-0.8b make setup` (xem bước 0.2). **Không mất điểm.** |
+| **< 4 GB** | Mở [`cloud/README.md`](cloud/README.md) và làm trên Colab/Kaggle. **Không mất điểm.** |
 
 → Sinh ra: **`hardware.json`** *(rubric 1)*
 
@@ -132,6 +145,10 @@ Nếu tải model fail do mạng trường chặn Hugging Face, xem
 
 ## Bước 1.1 — Đo baseline: TTFT / TPOT / percentiles
 
+> 📖 Đọc [`labs/01-measure/README.md`](labs/01-measure/README.md) trước: vì sao TPOT bị
+> chặn bởi **memory bandwidth** chứ không phải FLOPs, và vì sao chạy benchmark cạnh 40
+> tab Chrome là đang đo Chrome. REFLECTION §2 và §5 chấm đúng phần lập luận này.
+
 ```bash
 make bench
 ```
@@ -161,14 +178,14 @@ hơn bao nhiêu, nhỏ hơn bao nhiêu và **có đáng dùng không**.
 
 ```bash
 make serve                                      # terminal 1: bản 4-bit
-python labs/02-serve/serve.py --compare         # hoặc bản 2-bit
+.venv/bin/python labs/02-serve/serve.py --compare         # hoặc bản 2-bit
 ```
 
 Đặt cùng một câu hỏi cho cả hai, đọc kết quả rồi đưa ra kết luận.
 
 > ⚠️ Cả hai server mặc định dùng port **8080**. Bạn **phải tắt** server thứ nhất bằng
 > Ctrl-C trước khi bật bản `--compare`. Cách khác là dùng port riêng:
-> `python labs/02-serve/serve.py --compare --port 8090`.
+> `.venv/bin/python labs/02-serve/serve.py --compare --port 8090`.
 
 ## Bước 1.2 — Tune thread count cho máy của bạn
 
@@ -196,6 +213,10 @@ physical core count như kỳ vọng, hãy nói rõ. Đây là dữ liệu đán
 lỗi cần che đi.
 
 ## Bước 1.3 — Dựng server và chứng minh server hoạt động
+
+> 📖 Đọc [`labs/02-serve/README.md`](labs/02-serve/README.md) trước: continuous batching,
+> cách đọc queue time vs compute time bằng Little's Law, và thí nghiệm đáng giá nhất của
+> lab (`--parallel 1` so với `--parallel 4`). REFLECTION §3 chấm phần này.
 
 Bạn cần **2 terminal**.
 
@@ -271,6 +292,9 @@ compute. Đây là lập luận goodput@SLO trong deck §8.
 
 ## Bước 1.6 — Chạy RAG pipeline
 
+> 📖 Đọc [`labs/03-integrate/README.md`](labs/03-integrate/README.md) trước: vì sao
+> prefill là phần RAG thổi phồng, và prompt caching thay đổi số đo thế nào.
+
 Giữ server chạy. Tại terminal 2:
 
 ```bash
@@ -284,7 +308,8 @@ timings : {'embed': 0.0, 'retrieve': 0.3, 'llm': 1875.2, 'total': 1875.5}
 Dominant stage: llm (100% of total)
 ```
 
-→ *(rubric 12, 13)* · Screenshot optional: `08-pipeline.png`
+→ Sinh ra: **`benchmarks/03-integration-results.md`** *(rubric 12, 13)* — file này có một
+section **"required -- replace this line"** bạn phải thay. Screenshot optional: `08-pipeline.png`
 
 **Bạn cần làm:** trong REFLECTION §4, khai báo rõ stage nào **real**, stage nào **stub**.
 Dùng stub không mất điểm; khai báo sai mới mất điểm. Nếu có code N19, thay hai chỗ
