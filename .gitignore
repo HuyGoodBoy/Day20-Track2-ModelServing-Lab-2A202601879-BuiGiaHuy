@@ -6,10 +6,13 @@ __pycache__/
 .DS_Store
 
 # ── Model weights: large, re-downloadable. ──
-# models/active.json is un-ignored because STUDENTS must commit theirs (rubric item 2).
-# The template repo must NOT ship one, or verify.py passes the model check before the
-# student has downloaded anything. If you are maintaining this repo: after `git add -A`,
-# check `git ls-files models/` is empty before committing.
+# models/active.json is un-ignored because STUDENTS must commit theirs (rubric item 2):
+# their `git add -A` should pick it up without needing -f.
+#
+# MAINTAINERS: that same negation means `git add -A` in THIS repo re-adds your local
+# manifest, which then ships to students and makes verify.py pass the model check
+# before they have downloaded anything. Stage maintenance commits with `git add -u`
+# (tracked files only) and confirm `git ls-files models/` prints nothing.
 models/*
 !models/active.json
 
