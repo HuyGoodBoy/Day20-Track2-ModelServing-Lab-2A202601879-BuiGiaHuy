@@ -12,7 +12,7 @@ of adding useful work. Whether your machine follows that curve -- and where its
 knee sits -- is the thing worth reporting.
 
     make tune                      # threads sweep (default)
-    python labs/01-measure/tune.py --metric pp512    # tune prefill instead of decode
+    .venv/bin/python labs/01-measure/tune.py --metric pp512    # tune prefill instead of decode
 """
 from __future__ import annotations
 

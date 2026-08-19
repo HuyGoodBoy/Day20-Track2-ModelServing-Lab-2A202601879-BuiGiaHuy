@@ -5,9 +5,9 @@ Replaces compiling llama-cpp-python with CMAKE_ARGS. The release archive is
 10-35 MB (CUDA builds are larger), ships llama-server + llama-bench + llama-cli,
 and is new enough to load Gemma 4 (architecture "gemma4", April 2026).
 
-    python labs/00-setup/fetch-runtime.py            # auto-pick from hardware.json
-    python labs/00-setup/fetch-runtime.py --list      # show all assets, pick nothing
-    python labs/00-setup/fetch-runtime.py --asset llama-b10488-bin-win-vulkan-x64.zip
+    .venv/bin/python labs/00-setup/fetch-runtime.py            # auto-pick from hardware.json
+    .venv/bin/python labs/00-setup/fetch-runtime.py --list      # show all assets, pick nothing
+    .venv/bin/python labs/00-setup/fetch-runtime.py --asset llama-b10488-bin-win-vulkan-x64.zip
 """
 from __future__ import annotations
 

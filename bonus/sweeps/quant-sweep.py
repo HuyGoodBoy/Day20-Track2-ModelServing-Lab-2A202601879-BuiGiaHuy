@@ -9,7 +9,7 @@ flat-quantization ladder would show.
 Downloads only what is missing, and tells you the cost before it starts.
 
     make sweep-quant
-    python bonus/sweeps/quant-sweep.py --grid UD-Q2_K_XL,UD-Q4_K_XL,UD-Q6_K_XL,UD-Q8_K_XL
+    .venv/bin/python bonus/sweeps/quant-sweep.py --grid UD-Q2_K_XL,UD-Q4_K_XL,UD-Q6_K_XL,UD-Q8_K_XL
 """
 from __future__ import annotations
 
@@ -132,7 +132,7 @@ actually getting back per gigabyte spent.
 
 Speed is only half the trade. The other half is quality, and no benchmark here
 measures it. Serve two of these (`make serve` and
-`python labs/02-serve/serve.py --compare`) and ask each the same three questions
+`.venv/bin/python labs/02-serve/serve.py --compare`) and ask each the same three questions
 before you claim a winner.
 
 ## Your finding (required -- replace this line)

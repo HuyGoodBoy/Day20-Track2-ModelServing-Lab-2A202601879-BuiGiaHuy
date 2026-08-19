@@ -16,9 +16,9 @@ Unsloth's UD ("Unsloth Dynamic") quants keep the sensitive layers at higher
 precision, so UD-Q2_K_XL is far more usable than a flat Q2_K -- which is exactly
 what makes the comparison interesting rather than a foregone conclusion.
 
-    python labs/00-setup/download-model.py                # both quants
-    python labs/00-setup/download-model.py --with-mtp     # + MTP head (bonus C1)
-    python labs/00-setup/download-model.py --skip-download  # manifest only
+    .venv/bin/python labs/00-setup/download-model.py                # both quants
+    .venv/bin/python labs/00-setup/download-model.py --with-mtp     # + MTP head (bonus C1)
+    .venv/bin/python labs/00-setup/download-model.py --skip-download  # manifest only
 """
 from __future__ import annotations
 

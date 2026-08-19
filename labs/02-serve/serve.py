@@ -10,8 +10,8 @@ default -- there is no second, feature-poor server to switch to.
 
 Ports come from LAB_SERVER_PORT / LAB_EMBED_PORT when set. Colab already uses 8080,
 which is why the cloud notebook overrides it.
-    python labs/02-serve/serve.py --port 9000
-    python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
+    .venv/bin/python labs/02-serve/serve.py --port 9000
+    .venv/bin/python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
 """
 from __future__ import annotations
 

@@ -69,7 +69,7 @@ This sweep only measures the throughput half of the trade. The cost it hides is
 TTFT for queued requests: a larger micro-batch holds the device longer per step,
 so anything waiting behind it waits longer. To see both halves, re-run
 `make load-50` with your best and worst settings via
-`python labs/02-serve/serve.py -- -b N -ub M` and compare P95.
+`.venv/bin/python labs/02-serve/serve.py -- -b N -ub M` and compare P95.
 
 ## Your finding (required -- replace this line)
 

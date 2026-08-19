@@ -13,10 +13,10 @@ similarity, and times how throughput scales with batch size (pure prefill).
 
   # real mode — start a dedicated embedding server first (:8081):
   make serve-embed
-  python bonus/serving-regimes/embedding-serving.py
+  .venv/bin/python bonus/serving-regimes/embedding-serving.py
 
   # logic demo / smoke test — no server, deterministic bag-of-words vectors:
-  python bonus/serving-regimes/embedding-serving.py --offline
+  .venv/bin/python bonus/serving-regimes/embedding-serving.py --offline
 """
 from __future__ import annotations
 

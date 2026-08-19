@@ -194,6 +194,15 @@ def main() -> int:
     gguf = str(labkit.repo_root() / active["primary_model"])
     mlx_repo = args.mlx_repo or active.get("mlx_repo") or labkit.mlx_repo()
 
+    # Check the optional dependency BEFORE benchmarking. bench_mlx() dies on a missing
+    # mlx-lm, and it runs second — so without this the student sits through the whole
+    # llama.cpp half and then loses it to an install message.
+    try:
+        import mlx_lm  # noqa: F401
+    except ImportError:
+        labkit.die("mlx-lm not installed.",
+                   "Run: .venv/bin/pip install mlx mlx-lm   (Apple Silicon only)")
+
     a = bench_llama_cpp(gguf)
     b = bench_mlx(mlx_repo)
 

@@ -95,7 +95,7 @@ enough. Your prefill cost is currently bounded by throughput, not by sequence le
 To find where it *does* bend, extend the grid:
 
 ```bash
-python bonus/sweeps/ctx-len-sweep.py --grid 1024,4096,8192,16384,32768
+.venv/bin/python bonus/sweeps/ctx-len-sweep.py --grid 1024,4096,8192,16384,32768
 ```
 
 Watch the "vs linear" column: the first row that climbs meaningfully above 1.0 is where

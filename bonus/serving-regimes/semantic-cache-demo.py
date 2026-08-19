@@ -14,10 +14,10 @@ warns about: a too-low threshold (stale/wrong answers) and per-tenant salting
   # real mode — needs the chat server (:8080) and an embedding server (:8081):
   make serve &            # chat       on :8080
   make serve-embed &      # embeddings on :8081
-  python bonus/serving-regimes/semantic-cache-demo.py --threshold 0.85
+  .venv/bin/python bonus/serving-regimes/semantic-cache-demo.py --threshold 0.85
 
   # logic demo / smoke test — no servers (synthetic embeddings + fake LLM):
-  python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
+  .venv/bin/python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 """
 from __future__ import annotations
 

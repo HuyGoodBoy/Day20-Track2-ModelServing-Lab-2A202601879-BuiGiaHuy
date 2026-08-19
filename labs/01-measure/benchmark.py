@@ -9,7 +9,7 @@ TTFT is measured client-side (what a user actually waits for). Token counts come
 from llama.cpp's own `timings` block when the server reports it, so TPOT is not
 guessed from chunk counts.
 
-    make bench          # or: python labs/01-measure/benchmark.py
+    make bench          # or: .venv/bin/python labs/01-measure/benchmark.py
 """
 from __future__ import annotations
 
