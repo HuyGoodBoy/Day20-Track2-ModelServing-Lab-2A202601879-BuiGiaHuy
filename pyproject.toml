@@ -14,7 +14,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-mlx = ["mlx>=0.18", "mlx-lm>=0.18"]      # bonus B5, Apple Silicon only
+# bonus B5, Apple Silicon only. mlx-lm needs a build with a gemma4 model class;
+# 0.31.3 is the version this lab was verified against.
+mlx = ["mlx>=0.29", "mlx-lm>=0.31.3"]
 
 [tool.setuptools]
 # This isn't a package — students don't import lab modules. Skip auto-discovery.

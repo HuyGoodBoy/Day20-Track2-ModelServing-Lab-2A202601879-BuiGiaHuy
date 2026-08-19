@@ -29,7 +29,7 @@ B5 exists in four flavours so that every platform can reach 20/20:
 
 | Your machine | B5 option |
 |---|---|
-| Apple Silicon | `make mlx-compare` — MLX vs llama.cpp Metal, same model (needs `pip install mlx mlx-lm`) |
+| Apple Silicon | `make mlx-compare` — MLX vs llama.cpp Metal, same model (needs `pip install 'mlx-lm>=0.31.3' mlx`) |
 | NVIDIA GPU | **C6** Vulkan vs CUDA — you already have the Vulkan/prebuilt side |
 | Anything at all | **C8** `make semantic-cache` — the cache above the KV cache |
 | Anything at all | **C9** `make serve-embed && make embed-demo` — the prefill-bound regime |
