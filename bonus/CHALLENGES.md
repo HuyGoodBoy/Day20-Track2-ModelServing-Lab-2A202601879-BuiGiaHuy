@@ -1,118 +1,121 @@
-# Bonus challenges — pick one, go deep
+# Các challenge bonus — chọn một mục và phân tích sâu
 
-The sweeps are the warm-up. These are open-ended. **Pick one.** A deeply-explained
-C5 beats a shallow C1 + C2 + C3.
+Các sweep là phần khởi động. Những challenge dưới đây có tính mở. **Hãy chọn một.**
+Một bài C5 được giải thích sâu tốt hơn việc làm C1, C2 và C3 ở mức sơ sài.
 
-C1–C7 satisfy bonus **B4**. C6, C8 and C9 can each satisfy bonus **B5** instead
-(see [`README.md`](README.md)). Verify every flag against your own binary first —
-`llama-server --help | grep <flag>` — because llama.cpp moves fast and this file
-is pinned to build `b10488`.
+C1–C7 đáp ứng tiêu chí bonus **B4**. C6, C8 và C9 cũng có thể dùng riêng để đáp ứng
+**B5**. Xem [`README.md`](README.md). Trước tiên, hãy kiểm tra mọi flag trên binary của
+bạn bằng `llama-server --help | grep <flag>`. llama.cpp thay đổi nhanh và tài liệu này
+được cố định theo build `b10488`.
 
 ---
 
-## C1. Speculative decoding with Gemma 4's own MTP head
+## C1. Speculative decoding bằng MTP head của Gemma 4
 
-> **Needs `LAB_MODEL=gemma4-e2b`.** Qwen3.5 0.8B publishes no MTP head, so this challenge
-> is Gemma-only. On the small model, pick a different challenge — C2, C5, C7, C8 or C9 all
-> work with either.
+> **Yêu cầu `LAB_MODEL=gemma4-e2b`.** Qwen3.5 0.8B không phát hành MTP head, nên
+> challenge này chỉ dùng được với Gemma. Nếu dùng model nhỏ, hãy chọn C2, C5, C7, C8
+> hoặc C9.
 
-Gemma 4 E2B ships an **MTP (multi-token prediction) head** as a separate GGUF, which
-means you do not have to go hunting for a tokenizer-compatible draft model — the
-matched draft is published alongside the target.
+Gemma 4 E2B phát hành riêng một **MTP (multi-token prediction) head** dưới dạng GGUF.
+Bạn không cần tìm một draft model tương thích tokenizer vì draft khớp với target đã
+được phát hành cùng model.
 
 ```bash
 python labs/00-setup/download-model.py --with-mtp     # ~98 MB
 llama-server --help | grep -iE "draft|mtp|spec"       # find the current flag names
 ```
 
-In `b10488` the draft-model flags are `-md/--model-draft` and `--draft-max`
-(**not** `--draft-model` — that is the vLLM spelling). Whether the MTP head attaches
-through `-md` or a dedicated flag is exactly what you should check with `--help`
-before assuming.
+Trong build `b10488`, các draft flag là `-md/--model-draft` và `--draft-max`, **không
+phải** `--draft-model`. Tên sau là cách viết của vLLM. MTP head được gắn qua `-md` hay
+một flag chuyên biệt là điều bạn phải xác nhận bằng `--help` trước khi
+chạy.
 
-Measure tokens/sec with and without, at 2–3 temperatures. The deck claims EAGLE-3
-reaches 3–6.5×; you will likely see far less. **Explain the gap** — acceptance rate,
-draft/target size ratio, and how greedy vs sampled decoding changes it.
+Đo token/giây khi bật và tắt speculative decoding ở 2–3 mức temperature. Deck nêu
+EAGLE-3 đạt 3–6.5×, nhưng kết quả của bạn có thể thấp hơn nhiều. Hãy giải thích khoảng
+cách dựa trên acceptance rate, tỷ lệ kích thước draft/target và ảnh hưởng của greedy
+so với sampled decoding.
 
-Also worth testing: speculative decoding is a *latency* optimization. Under heavy
-concurrency the verification overhead can make it net-negative, which is why
-production engines disable it above a batch-size threshold. Run `make load-50`
-with and without it and see whether that shows up on your machine.
+Speculative decoding là một tối ưu latency. Khi concurrency cao, chi phí verification
+có thể làm kết quả chậm hơn. Vì vậy, production engine thường tắt cơ chế này khi batch
+size vượt một threshold. Chạy `make load-50` khi bật và tắt nó để kiểm tra hiện tượng
+trên máy của bạn.
 
-## C2. KV-cache quantization
+## C2. Quantization cho KV cache
 
 ```bash
 python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
 ```
 
-This is the deck's "FP8 KV cache" idea on CPU/Metal/Vulkan. Measure three things:
-RAM saved (watch process RSS as `--ctx-size` grows), latency change, and — the part
-people skip — **quality change**. Build a 10-prompt eval you can grade
-automatically: JSON extraction, or arithmetic, anything with a checkable answer.
-A memory saving that quietly costs accuracy is not a win.
+Đây là cách kiểm tra ý tưởng “FP8 KV cache” trong deck trên CPU, Metal hoặc Vulkan.
+Đo ba yếu tố: lượng RAM giảm, thay đổi latency và thay đổi chất lượng. Theo dõi RSS của
+process khi `--ctx-size` tăng. Với chất lượng, hãy tạo một eval gồm 10 prompt có thể
+chấm tự động, chẳng hạn trích xuất JSON hoặc phép tính số học. Tiết kiệm bộ nhớ nhưng
+làm giảm accuracy không phải là một kết quả tốt.
 
-## C3. Multi-LoRA serving
+## C3. Phục vụ nhiều LoRA
 
-`--lora` accepts multiple adapters. Find or train two small LoRAs (Hugging Face has
-plenty — one for SQL, one for tool-calling), serve both over the same base weights,
-and measure the per-request adapter switching cost. This is the deck's Multi-LoRA
-serving frame (Punica / S-LoRA) at laptop scale.
+`--lora` chấp nhận nhiều adapter. Tìm hoặc train hai LoRA nhỏ. Hugging Face có nhiều
+lựa chọn, chẳng hạn một LoRA cho SQL và một LoRA cho tool calling. Phục vụ cả hai trên
+cùng base weights, rồi đo chi phí chuyển adapter theo từng request. Đây là khung phục
+vụ Multi-LoRA trong deck, gồm Punica và S-LoRA, ở quy mô laptop.
 
-## C4. Best-of-N sampling with a reranker
+## C4. Lấy mẫu Best-of-N với reranker
 
-Send the same prompt N times concurrently with different seeds, then pick the best
-answer with a cheap reranker (a length/repetition heuristic is enough to start).
-Measure end-to-end latency and quality against single-shot.
+Gửi cùng một prompt N lần song song với các seed khác nhau, sau đó dùng một reranker
+nhẹ để chọn câu trả lời tốt nhất. Có thể bắt đầu bằng heuristic về độ dài hoặc mức lặp.
+Đo end-to-end latency và chất lượng so với single-shot.
 
-The point: "throughput" can be spent on *quality for one user* instead of *more
-users*. Your `--parallel` slots do not care which you choose.
+Mục đích là kiểm tra cách dùng throughput để tăng chất lượng cho một người dùng thay vì
+phục vụ thêm người dùng. Các slot của `--parallel` không phân biệt hai cách sử dụng này.
 
-## C5. The "smallest useful model" challenge
+## C5. Challenge “model nhỏ nhất vẫn hữu ích”
 
-If yours is the slowest laptop in the room, this one is for you. Walk down the
-Unsloth Dynamic ladder — `UD-Q8_K_XL` → `UD-Q4_K_XL` → `UD-Q2_K_XL` → `UD-IQ2_M` —
-and find where the model stops being *useful* rather than where it stops being fast.
-Grade 5 prompts by hand at each level.
+Nếu laptop của bạn chậm, hãy đi dần xuống dải Unsloth Dynamic:
+`UD-Q8_K_XL` → `UD-Q4_K_XL` → `UD-Q2_K_XL` → `UD-IQ2_M`. Tìm mức model ngừng hữu ích,
+không chỉ mức model ngừng nhanh. Tự chấm 5 prompt ở mỗi mức.
 
-Deliverable: an argument for which quantization you would actually ship at your RAM
-ceiling, with the failure you saw at the next step down.
+Sản phẩm cần nộp là lập luận về quantization bạn thực sự sẽ triển khai trong giới hạn
+RAM của mình, kèm một failure quan sát được ở mức thấp hơn kế tiếp.
 
-## C6. Vulkan vs CUDA on the same GPU  *(also satisfies B5)*
+## C6. Vulkan so với CUDA trên cùng GPU *(cũng đáp ứng B5)*
 
-If you have an NVIDIA GPU you are already half done: on Linux the prebuilt runtime
-**is** the Vulkan build, so you have the Vulkan side measured. Build the CUDA side:
+Nếu có NVIDIA GPU, bạn đã có một nửa thí nghiệm. Trên Linux, prebuilt runtime của lab
+là bản Vulkan vì llama.cpp **không phát hành prebuilt CUDA binary cho Linux**. Hãy build
+phía CUDA:
 
 ```bash
 LLAMA_CMAKE_FLAGS=-DGGML_CUDA=ON make build-llama
 make compare-builds
 ```
 
-Quantify the gap, then answer the real question: **why do vLLM and SGLang bother
-with vendor-specific kernels** (FA3, FA4, FlashMLA, TRTLLM-MHA) instead of shipping
-one portable Vulkan path? Your number is the argument.
+Việc build với `-DGGML_CUDA=ON` và so sánh bằng `make compare-builds` đồng thời hoàn
+thành challenge C6. Định lượng khoảng cách, rồi trả lời câu hỏi chính: vì sao vLLM và
+SGLang dùng kernel riêng theo nhà cung cấp như FA3, FA4, FlashMLA và TRTLLM-MHA thay vì
+chỉ cung cấp một đường Vulkan dùng chung. Số đo của bạn là bằng chứng cho lập luận.
 
-## C7. CPU instruction-set archaeology
+## C7. Khảo sát instruction set của CPU
 
-Build twice — `-DGGML_NATIVE=ON` versus `-DGGML_NATIVE=OFF` (a generic baseline) —
-and compare. Then look up what your CPU actually has (`/proc/cpuinfo` on Linux,
-`sysctl -a | grep machdep.cpu` on macOS) and try enabling extensions explicitly.
+Build hai lần với `-DGGML_NATIVE=ON` và `-DGGML_NATIVE=OFF`. Vế thứ hai tạo một bản CPU
+baseline chung. Sau đó so sánh hai bản. Kiểm tra CPU thật sự hỗ trợ gì bằng
+`/proc/cpuinfo` trên Linux hoặc `sysctl -a | grep machdep.cpu` trên macOS, rồi thử bật
+tường minh các extension.
 
-Make a table of build flag vs tokens/sec. This is the same decision the cloud side
-makes choosing FA3 for Hopper vs FA4 for Blackwell: match the kernel to the silicon.
+Lập bảng build flag so với token/giây. Đây là cùng loại quyết định mà hệ thống cloud
+đưa ra khi chọn FA3 cho Hopper hoặc FA4 cho Blackwell: kernel phải khớp với silicon.
 
-One trap to avoid: never compare a Debug build to a Release build and report the
-difference as a speedup.
+Không bao giờ so sánh một bản Debug với một bản Release rồi gọi chênh lệch đó là
+speedup.
 
-## C8. Semantic caching — the cache above the KV cache  *(also satisfies B5)*
+## C8. Semantic cache — cache phía trên KV cache *(cũng đáp ứng B5)*
 
-The deck argues the serving stack is **three caches deep**:
+Deck mô tả serving stack có **ba tầng cache**:
 
 ```
 request -> [1] semantic cache (meaning) -> [2] prefix/KV cache -> [3] full inference
 ```
 
-A layer-1 hit returns a stored answer to a *paraphrased* prompt for **zero** compute
-— no prefill, no decode. Layer 2 only helps when the prefix is byte-identical.
+Khi tầng 1 hit, hệ thống trả lại câu trả lời đã lưu cho một prompt được paraphrase mà
+không tốn compute, prefill hay decode. Tầng 2 chỉ có ích khi prefix giống nhau từng byte.
 
 ```bash
 make serve &            # chat       :8080
@@ -122,70 +125,70 @@ make semantic-cache
 python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 ```
 
-**Important: the lab has no dedicated embedding model, so `make serve-embed` runs a *chat* model in
-pooling mode.** Mean-pooled decoder states are a weak embedder — you will see genuine
-paraphrases score *below* unrelated prompts. Do not report the raw hit rate as if it
-meant something; the interesting deliverable is the diagnosis:
+**Lab không có embedding model chuyên dụng, nên `make serve-embed` chạy chat model ở
+pooling mode.** Mean-pooled decoder state là một sentence encoder yếu. Paraphrase thật
+có thể có điểm thấp hơn prompt không liên quan. Không báo raw hit rate như một kết quả
+chất lượng. Sản phẩm cần nộp là phần chẩn đoán:
 
-- name one **false hit** (an unrelated prompt that matched) and one **false miss**
-  (a real paraphrase that did not), with their similarity scores
-- show that no single threshold fixes both — that is the actual trade-off
-- explain *why* a decoder trained to predict next tokens makes a poor sentence encoder,
-  and what a dedicated embedding model (Qwen3-Embedding, BGE-M3, EmbeddingGemma) does
-  differently
+- Nêu một **false hit**, tức prompt không liên quan nhưng vẫn match, kèm similarity score.
+- Nêu một **false miss**, tức paraphrase thật nhưng không match, kèm similarity score.
+- Chứng minh không có một threshold duy nhất sửa được cả hai trường hợp.
+- Giải thích vì sao decoder được train để dự đoán token kế tiếp không phải sentence
+  encoder tốt, và embedding model chuyên dụng như Qwen3-Embedding, BGE-M3 hoặc
+  EmbeddingGemma khác ở đâu.
 
-If you want the clean version of the curve, point `--embed-url` at a server running a
-real embedding GGUF and compare the two similarity distributions. That comparison —
-weak embedder vs proper embedder, same prompt stream — is a stronger submission than a
-hit-rate table from either one alone.
+Nếu muốn có một đường cong rõ hơn, hãy đặt `--embed-url` tới server đang chạy một GGUF
+embedding model thực và so sánh hai phân phối similarity. So sánh weak embedder với
+proper embedder trên cùng prompt stream là bằng chứng mạnh hơn bảng hit rate riêng lẻ.
 
-Security note worth a sentence in your writeup: shared semantic and prefix caches can
-leak information across users through timing side channels, so production deployments
-salt the cache per tenant.
+Trong báo cáo, hãy nêu thêm rủi ro bảo mật: semantic cache và prefix cache dùng chung có
+thể làm lộ thông tin giữa người dùng qua timing side channel. Hệ thống production
+thường thêm salt theo từng tenant.
 
-## C9. Embedding & reranker serving — the retrieval half  *(also satisfies B5)*
+## C9. Phục vụ embedding và reranker — phần retrieval *(cũng đáp ứng B5)*
 
-Embedding serving is a **different regime**: one forward pass per text, no KV cache,
-no decode loop. Throughput comes from large *static* batches, not continuous batching.
+Embedding serving là một **regime khác**: mỗi văn bản chỉ cần một forward pass, không có
+KV cache và không có vòng decode. Throughput đến từ static batch lớn, không phải
+continuous batching.
 
 ```bash
 make serve-embed &
 make embed-demo
 ```
 
-Measure how latency scales with batch size (pure prefill) and compare that curve to
-your decode-bound numbers from track 02. Then explain why a chat endpoint and an
-embedding endpoint want *opposite* batching strategies — and what that implies for
-anyone serving both behind one autoscaler.
+Đo cách latency thay đổi theo batch size trong trường hợp chỉ có prefill, rồi so sánh
+đường cong đó với số liệu bị giới hạn bởi decode ở track 02. Giải thích vì sao chat
+endpoint và embedding endpoint cần chiến lược batching trái ngược nhau, cùng hệ quả khi
+phục vụ cả hai sau một autoscaler.
 
-Note the demo reuses the chat GGUF to avoid another download. Real retrieval quality
-needs a dedicated embedding model; say so in your writeup rather than pretending
-otherwise.
+Demo dùng lại chat GGUF để tránh tải thêm. Retrieval thực tế cần embedding model chuyên
+dụng. Hãy ghi rõ giới hạn này trong báo cáo.
 
-## C10. VLM serving (open-ended)
+## C10. Phục vụ VLM, dạng mở
 
-Gemma 4 E2B is multimodal, and the repo ships `mmproj-F16.gguf` (~986 MB) — the
-vision projector. Deck §5 lists VLM serving as datacenter-shaped, but you can run it:
+Gemma 4 E2B là model đa phương thức. Repo cung cấp `mmproj-F16.gguf`, khoảng 986 MB, làm
+vision projector. Deck §5 xếp VLM serving vào nhóm bài toán kiểu datacenter, nhưng bạn
+vẫn có thể chạy trên máy của mình:
 
 ```bash
 # fetch mmproj-F16.gguf from the same repo, then:
 python labs/02-serve/serve.py -- --mmproj models/mmproj-F16.gguf
 ```
 
-Design your own experiment. The interesting question: how does an image in the prompt
-change your TTFT and KV-cache footprint compared to the same number of text tokens?
-No script is provided — that is the challenge.
+Hãy tự thiết kế thí nghiệm. Câu hỏi chính là: một hình ảnh trong prompt thay đổi TTFT và
+dung lượng KV cache như thế nào so với cùng số lượng text token. Repo không cung cấp
+script cho challenge này.
 
 ---
 
-## Writing it up
+## Cách viết báo cáo
 
-Whatever you pick, the deliverable is one section in `submission/REFLECTION.md`
-(or a file at `bonus/<challenge>.md`):
+Với challenge đã chọn, hãy viết một section trong `submission/REFLECTION.md` hoặc tạo
+`bonus/<challenge>.md`:
 
-- **Setup** — hardware, and exactly what you changed
-- **Numbers** — a before/after table
-- **One paragraph** — what this tells you that the deck did not already say
+- **Thiết lập** — phần cứng và thay đổi chính xác bạn đã thực hiện.
+- **Số liệu** — bảng before/after.
+- **Một đoạn phân tích** — điều bạn rút ra ngoài nội dung đã có trong deck.
 
-Be honest if the result surprised you. Those are the most interesting writeups, and
-they score highest.
+Hãy ghi đúng kết quả kể cả khi nó trái kỳ vọng. Một finding bất ngờ được giải thích rõ
+thường có giá trị hơn kết quả khớp kỳ vọng nhưng không được phân tích.

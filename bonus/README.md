@@ -1,76 +1,88 @@
-# Bonus track (+20 pts, optional)
+# Phần bonus (+20 điểm, không bắt buộc)
 
-> Chỉ bắt đầu khi base track xong và `make verify` exit 0 — xem
-> **[GUIDE.md → PHASE 2](../GUIDE.md)**
+> Chỉ bắt đầu khi bạn đã hoàn tất base track và `make verify` exit 0. Xem
+> **[GUIDE.md → PHASE 2](../GUIDE.md)**.
 
-The core lab hands you a prebuilt binary and a working server. This track takes the
-abstraction away: you compile llama.cpp for *your* CPU, sweep the knobs that matter
-on *your* hardware, and explain what you found.
+Ở phần lab chính, bạn được cung cấp một prebuilt binary và một server hoạt động sẵn.
+Trong track này, bạn đi xuống một lớp thấp hơn: tự compile llama.cpp cho CPU của mình,
+chạy sweep các knob quan trọng trên phần cứng của mình và giải thích kết quả.
 
-> **Weak laptops have the advantage here.** The prebuilt binary you used all lab is
-> compiled for a generic baseline CPU, because it has to run everywhere. A build
-> targeted at your actual CPU can use the vector extensions it really has — and the
-> gap is usually widest on modest hardware. That gap is the single largest speedup
-> available anywhere in this lab.
+> **Laptop yếu hoặc chỉ có CPU thường hưởng lợi nhiều nhất ở B1.** Prebuilt binary dùng
+> trong lab phải chạy được trên nhiều máy nên chỉ nhắm tới một CPU baseline chung. Bản
+> build dành cho CPU thật của bạn có thể dùng đúng các vector extension mà CPU hỗ trợ.
+> Vì vậy, khoảng cách thường rõ nhất trên phần cứng khiêm tốn. Đây thường là speedup lớn
+> nhất có thể đạt được trong lab này.
 
-**Time budget:** 60–120 minutes. The build alone is 5–15 minutes. Each sweep is
-5–15 minutes. **Do not run everything** — pick what your hardware makes interesting.
+**Thời gian dự kiến:** 60–120 phút. Riêng bước build mất 5–15 phút. Mỗi sweep mất
+5–15 phút. **Không cần chạy tất cả.** Hãy chọn một hoặc hai mục phù hợp với phần cứng
+và câu hỏi bạn muốn trả lời.
 
 ---
 
-## The five bonus criteria (4 pts each)
+## Năm tiêu chí bonus, mỗi tiêu chí 4 điểm
 
-| # | What | How |
-|---|---|---|
-| **B1** | Build from source, compare against the prebuilt binary | `make build-llama && make compare-builds` |
-| **B2** | Run at least one sweep | `make sweep-quant` · `sweep-ctx` · `sweep-batch` · `sweep-gpu` |
-| **B3** | Quantify a bonus-track speedup (before/after) | REFLECTION §6 |
-| **B4** | Go deep on one challenge C1–C7 | [`CHALLENGES.md`](CHALLENGES.md) |
-| **B5** | One runtime/regime comparison — **pick any one** | MLX · C8 · C9 · C6 |
+| # | Được điểm khi | Lệnh | Điểm |
+|--:|---|---|--:|
+| B1 | Compile llama.cpp cho CPU của bạn và **so với prebuilt binary** | `make build-llama && make compare-builds` | 4 |
+| B2 | Chạy ít nhất 1 sweep | `make sweep-quant` / `sweep-ctx` / `sweep-batch` / `sweep-gpu` | 4 |
+| B3 | Speedup **của bonus track** có before/after rõ ràng | REFLECTION §6 (từ B1 hoặc B2, **không** phải kết quả `make tune` của base) | 4 |
+| B4 | Làm ít nhất 1 challenge C1–C7 | [`bonus/CHALLENGES.md`](CHALLENGES.md) | 4 |
+| B5 | Một so sánh runtime/regime — **chọn 1**: MLX (Mac) · C8 semantic cache · C9 embedding serving · C6 Vulkan vs CUDA | `make mlx-compare` · `make semantic-cache` · `make embed-demo` | 4 |
 
-B5 exists in four flavours so that every platform can reach 20/20:
+**Tổng bonus: 20 điểm.**
 
-| Your machine | B5 option |
+Chi tiết từng challenge có trong [`CHALLENGES.md`](CHALLENGES.md).
+
+B1 yêu cầu cả hai phần: build từ mã nguồn **và** so sánh với prebuilt binary bằng
+`make compare-builds`. Chỉ build thành công chưa đủ để đạt B1.
+
+B5 có bốn lựa chọn để mọi nền tảng đều có thể đạt 20/20:
+
+| Máy của bạn | Lựa chọn B5 |
 |---|---|
-| Apple Silicon | `make mlx-compare` — MLX vs llama.cpp Metal, same model (needs `pip install 'mlx-lm>=0.31.3' mlx`) |
-| NVIDIA GPU | **C6** Vulkan vs CUDA — you already have the Vulkan/prebuilt side |
-| Anything at all | **C8** `make semantic-cache` — the cache above the KV cache |
-| Anything at all | **C9** `make serve-embed && make embed-demo` — the prefill-bound regime |
+| Apple Silicon | `make mlx-compare` — MLX so với llama.cpp Metal trên cùng model; cần `pip install 'mlx-lm>=0.31.3' mlx` |
+| NVIDIA GPU | **C6** Vulkan so với CUDA; bạn đã có phía Vulkan/prebuilt |
+| Mọi nền tảng | **C8** `make semantic-cache` — cache nằm phía trên KV cache |
+| Mọi nền tảng | **C9** `make serve-embed && make embed-demo` — regime bị giới hạn bởi prefill |
 
-C8 and C9 both run with `--offline` too (synthetic embeddings, no server), so you can
-read and reason about the logic even while a download is still going.
+C8 và C9 cũng chạy được với `--offline`. Khi đó, script dùng embedding tổng hợp và
+không cần server. Bạn có thể đọc, chạy và phân tích logic trong lúc chờ tải model.
 
-Two things to know before you pick:
+Trước khi chọn, bạn cần biết hai điểm sau:
 
-- **Model matters for one challenge only.** C1 (speculative decoding) needs Gemma 4 E2B's
-  MTP head; Qwen3.5 0.8B has none. Everything else here — B1, B2, B3, B5, and challenges
-  C2-C10 — works with either model. The sweeps read the quantization ladder from the model
-  registry, so `make sweep-quant` adapts automatically.
+- **Model chỉ ảnh hưởng tới một challenge.** C1 về speculative decoding cần MTP head
+  của Gemma 4 E2B. Qwen3.5 0.8B không phát hành MTP head. B1, B2, B3, B5 và C2–C10
+  đều dùng được với cả hai model. Với model nhỏ, hãy chọn C2, C5, C7, C8 hoặc C9 thay
+  cho C1. Các sweep đọc dải quantization từ model registry, nên `make sweep-quant`
+  tự thích ứng với model bạn đã chọn.
 
-- **MLX**: `mlx-lm` rejects ~140 parameters in Unsloth's Gemma 4 MLX weights on a strict
-  load, because Gemma 4 E2B shares KV across 20 of its 35 layers and mlx-lm builds only
-  the tensors it uses while the conversion kept all of them. `compare-mlx-vs-llama-cpp.py`
-  detects this, retries non-strictly, and prints a sample generation so you can confirm
-  the output is coherent before trusting any number. Verified working; do check that
-  sample.
-- **C8 semantic cache**: the lab has no dedicated embedding model, so the embedding server
-  runs your *chat*
-  model in pooling mode. That is a weak encoder, and the exercise is to diagnose it
-  rather than to report a hit rate. Read C8 before you start.
+- **MLX:** khi strict load, `mlx-lm` từ chối khoảng 140 parameter trong bộ Gemma 4
+  MLX weights của Unsloth. Gemma 4 E2B dùng chung KV ở 20 trong số 35 layer, còn quá
+  trình chuyển đổi vẫn giữ lại tất cả parameter. Script
+  `compare-mlx-vs-llama-cpp.py` phát hiện trường hợp này, thử lại bằng non-strict load
+  và in một sample generation. Bạn phải kiểm tra sample đó có mạch lạc trước khi
+  tin vào số đo. Bài này cần `mlx-lm >= 0.31.3`.
+
+- **C8 semantic cache:** lab không có embedding model chuyên dụng. Vì vậy,
+  `make serve-embed` chạy chat model ở pooling mode. Đây là một sentence encoder yếu;
+  paraphrase thật có thể nhận điểm thấp hơn prompt không liên quan. Bài làm không yêu
+  cầu báo hit rate. Bạn phải chẩn đoán vấn đề: nêu một false hit và một false miss kèm
+  điểm số, rồi chứng minh không có một threshold duy nhất sửa được cả hai. Hãy đọc C8
+  trước khi bắt đầu.
 
 ---
 
-## Which sweep should *you* run?
+## Nên chạy sweep nào
 
-| If your machine is… | Run | Because |
+| Trường hợp | Nên chạy | Lý do |
 |---|---|---|
-| CPU-only | **B1** `compare-builds`, then `make tune` harder | Compile flags and thread count are your whole performance story |
-| RAM-constrained | `make sweep-quant` | The size/speed/quality trade is a real decision, not homework |
-| Has a GPU | `make sweep-gpu` | Find where partial offload stops helping |
-| Doing long-context RAG | `make sweep-ctx` | Watch prefill go super-linear — that *is* TTFT |
-| Serving many users | `make sweep-batch` | Chunked prefill: throughput bought with TTFT |
+| Chỉ có CPU | **B1** `compare-builds`, rồi khảo sát thread kỹ hơn | Compile flag và số thread là hai knob chính của bạn |
+| RAM hạn chế | `make sweep-quant` | Đo trực tiếp đánh đổi giữa kích thước, tốc độ và chất lượng |
+| Có GPU | `make sweep-gpu` | Tìm điểm partial offload không còn cải thiện |
+| Làm RAG với context dài | `make sweep-ctx` | Quan sát chi phí prefill tăng phi tuyến và tác động lên TTFT |
+| Phục vụ nhiều người dùng | `make sweep-batch` | Đo cách chunked prefill đổi throughput lấy TTFT |
 
-Layout:
+Cấu trúc thư mục:
 
 ```
 bonus/
@@ -89,32 +101,34 @@ bonus/
     └── compare-mlx-vs-llama-cpp.py   ← B5 on Apple Silicon
 ```
 
-Reports land in `benchmarks/bonus-*.md` at the repo root. Commit them.
+Các report được ghi vào `benchmarks/bonus-*.md` ở thư mục gốc của repo. Hãy commit
+những tệp này.
 
 ---
 
-## Why this maps onto the deck
+## Liên hệ với nội dung trong deck
 
-The deck talks about FlashAttention variants, PagedAttention, FA3-vs-FA4 kernel
-selection, MLA — all decisions made on datacenter GPUs. You cannot run FA3 on a
-laptop. You *can* make the same **kind** of decision at small scale:
+Deck trình bày FlashAttention, PagedAttention, cách chọn kernel FA3 so với FA4 và MLA.
+Đó là các quyết định trên GPU datacenter. Bạn không chạy được FA3 trên laptop, nhưng
+vẫn có thể đo cùng một loại đánh đổi ở quy mô nhỏ:
 
-| Laptop knob | Datacenter analogue |
+| Knob trên laptop | Trường hợp tương ứng ở datacenter |
 |---|---|
-| `-t` thread count | parallelism width / TP size |
-| `-b` / `-ub` | chunked prefill scheduling |
-| quantization choice | the FP8 / INT4 / NVFP4 decision matrix |
-| `-ngl` layer offload | what runs on accelerator vs host |
-| `-DGGML_NATIVE=ON` | picking FA3 for Hopper vs FA4 for Blackwell |
+| Số thread `-t` | Độ rộng parallelism / kích thước TP |
+| `-b` / `-ub` | Lập lịch chunked prefill |
+| Lựa chọn quantization | Ma trận quyết định FP8 / INT4 / NVFP4 |
+| Layer offload `-ngl` | Phần chạy trên accelerator so với host |
+| `-DGGML_NATIVE=ON` | Chọn FA3 cho Hopper so với FA4 cho Blackwell |
 
-After this track, vLLM's `--gpu-memory-utilization` stops being a magic number and
-starts being a trade-off you have personally measured.
+Sau khi tự đo, bạn có thể xem `--gpu-memory-utilization` của vLLM như một đánh đổi cần
+kiểm chứng, không phải một con số mặc định áp dụng cho mọi máy.
 
 ---
 
-## How to write it up
+## Cách viết báo cáo
 
-In `submission/REFLECTION.md` **§6** (§5 is for your *base-track* change — B3 must be a bonus-track result):
+Trong `submission/REFLECTION.md`, dùng **§6**. §5 dành cho thay đổi của base track;
+B3 phải dùng kết quả của bonus track.
 
 ```
 Change:  <e.g. rebuilt llama.cpp with -DGGML_NATIVE=ON on a CPU with AVX-512>
@@ -125,15 +139,16 @@ Why it worked (1-2 paragraphs): <a mechanism, not vibes -- memory bandwidth?
                                  vector width? cache residency? scheduling?>
 ```
 
-Every generated report ends with a **"required — replace this line"** section.
-`make verify` fails while any of those are unanswered, on purpose: the numbers are
-the easy half.
+Mọi report được sinh dưới `benchmarks/` đều kết thúc bằng một section có đánh dấu
+**"required -- replace this line"**. Bạn phải thay dòng đó bằng nhận xét của mình.
+Nếu còn sót, `make verify` sẽ fail. Số liệu chỉ là đầu vào; phần giải thích mới là nội
+dung được chấm.
 
-**Be honest when a result contradicts the deck.** A measurement that came out the
-"wrong" way and is explained well scores higher than one that matched expectations
-and was not examined. Instructors read these closely.
+Hãy trung thực khi kết quả trái với kỳ vọng. Một finding được giải thích kỹ có giá trị
+hơn năm bảng số liệu nông. Kết quả đi ngược deck nhưng được phân tích rõ thường được
+chấm cao hơn kết quả đúng kỳ vọng mà không có giải thích.
 
-## Do not compare across laptops
+## Không so sánh giữa các laptop
 
-Your numbers are not comparable to your classmate's. The only fair comparison is
-your machine before vs your machine after.
+Số liệu của bạn không so sánh được với số liệu của bạn cùng lớp. So sánh hợp lệ là
+before và after trên cùng máy của bạn.
