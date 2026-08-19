@@ -14,7 +14,7 @@ There is **one** server. The prebuilt native binary gives you `/metrics`,
 make serve
 
 # terminal 2
-make smoke          # rubric items 5 + 6 in one screenshot
+make smoke          # rubric items 6 + 7 in one screenshot
 make load-10        # 10 users, 60s  -> benchmarks/locust-10_stats.csv
 make load-50        # 50 users, 60s  -> benchmarks/locust-50_stats.csv
 
@@ -32,9 +32,9 @@ gauges all read ~1. That is the single most common mistake in this track.
 
 | Command | Artifact | Rubric |
 |---|---|---|
-| `make smoke` | screenshot: a completion **and** non-zero `tokens_predicted_total` | 5, 6 |
-| `make load-10` / `load-50` | locust summary screenshots + CSVs | 7 |
-| `make load-report` | `benchmarks/02-server-results.md` | 8 |
+| `make smoke` | screenshot: a completion **and** non-zero `tokens_predicted_total` | 6, 7 |
+| `make load-10` / `load-50` | locust summary screenshots + CSVs | 8 |
+| `make load-report` | `benchmarks/02-server-results.md` | 10 |
 | `make metrics` | `benchmarks/02-server-batching-u50.md` + CSV | 9 |
 
 ## Reading the load report

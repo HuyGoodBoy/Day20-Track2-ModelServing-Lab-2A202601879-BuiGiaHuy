@@ -14,7 +14,7 @@ Starts `llama-server` on a scratch port (8099), streams 10 prompts through
 `/v1/chat/completions`, tears the server down, then repeats for the second
 quantization. You measure real over-the-wire latency without managing two terminals.
 
-Writes **`benchmarks/01-quickstart-results.md`** — rubric items 3 and 4.
+Writes **`benchmarks/01-quickstart-results.md`** — rubric items 3, 4 and 5.
 
 ```
 TTFT P50/P95   128 / 190 ms     <- prefill: how long until the first token
@@ -41,7 +41,7 @@ Sweeps thread counts through `llama-bench` (no server, no compiler, no GPU neede
 writes **`benchmarks/01-tuning-tg128.md`** with a table, a winner, and a speedup ratio
 against the physical-core default.
 
-This is enough for **rubric item 13** on its own. No bonus work required.
+This is enough for **rubric item 11** on its own. No bonus work required.
 
 The expected shape: throughput climbs to roughly your *physical* core count, then
 flattens or drops. Decode is bandwidth-bound, so threads past that point compete for

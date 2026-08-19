@@ -1,5 +1,8 @@
 # Bonus track (+20 pts, optional)
 
+> Chỉ bắt đầu khi base track xong và `make verify` exit 0 — xem
+> **[GUIDE.md → PHASE 2](../GUIDE.md)**
+
 The core lab hands you a prebuilt binary and a working server. This track takes the
 abstraction away: you compile llama.cpp for *your* CPU, sweep the knobs that matter
 on *your* hardware, and explain what you found.

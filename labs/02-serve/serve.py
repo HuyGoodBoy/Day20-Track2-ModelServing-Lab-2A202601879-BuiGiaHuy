@@ -57,7 +57,7 @@ def main() -> int:
     if not args.embedding:
         print(f"  slots    : {labkit.parallel_slots()} (continuous batching on)")
         print(f"  endpoints: http://localhost:{port}/v1/chat/completions")
-        print(f"             http://localhost:{port}/metrics   <- Prometheus, rubric item 6")
+        print(f"             http://localhost:{port}/metrics   <- Prometheus, rubric item 7")
         print(f"             http://localhost:{port}/slots     <- per-slot state")
     else:
         print(f"  endpoints: http://localhost:{port}/v1/embeddings")

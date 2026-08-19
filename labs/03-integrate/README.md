@@ -22,7 +22,7 @@ real.
 | N19 Vector + features | vector index + Feast view | `TOY_DOCS` + keyword overlap |
 | N20 Serving | your `llama-server` | — (this one must be real) |
 
-**Stubbing is fine and costs no points — misrepresenting it does.** Rubric item 11
+**Stubbing is fine and costs no points — misrepresenting it does.** Rubric item 13
 asks you to say which pieces are real and which are stubbed. An honest "SQLite
 standing in for N18, because my Iceberg setup is not ready" scores full marks.
 
@@ -53,7 +53,7 @@ timings : {'embed': 41.2, 'retrieve': 0.3, 'llm': 1840.5, 'total': 1882.0}
 Dominant stage: llm (98% of total)
 ```
 
-Put those numbers in **REFLECTION §4** (rubric items 10 and 11).
+Put those numbers in **REFLECTION §4** (rubric items 12 and 13).
 
 Most students find the LLM dominates and are right. The interesting cases are the
 ones where it does not — a slow embedder, or retrieval over a large index, can beat

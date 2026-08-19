@@ -65,7 +65,7 @@ serve: venv-check ## Start llama-server on :8080 (OpenAI-compat + /metrics)
 serve-embed: venv-check ## Start an embedding server on :8081 (bonus C9)
 	@$(PY) labs/02-serve/serve.py --embedding
 
-smoke: venv-check ## Prove /v1/chat/completions + non-zero /metrics (rubric 5 + 6)
+smoke: venv-check ## Prove /v1/chat/completions + non-zero /metrics (rubric 6 + 7)
 	@$(PY) labs/02-serve/smoke-test.py
 
 load-10: venv-check ## Load test: 10 users, 60s

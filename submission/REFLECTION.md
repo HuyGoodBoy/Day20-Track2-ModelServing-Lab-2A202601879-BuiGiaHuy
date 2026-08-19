@@ -12,7 +12,7 @@
 
 ---
 
-## 1. Hardware & runtime  *(rubric 1, 2 — 10 pts)*
+## 1. Hardware & runtime  *(rubric 1, 2 — 10 điểm)*
 
 > Từ `make probe`. Paste output hoặc điền tay.
 
@@ -35,7 +35,7 @@ _Answer here._
 
 ---
 
-## 2. Đo lường  *(rubric 3, 4 — 15 pts)*
+## 2. Đo lường  *(rubric 3, 4, 5 — 20 điểm)*
 
 > Paste bảng từ `benchmarks/01-quickstart-results.md` (`make bench` tự sinh).
 
@@ -52,7 +52,7 @@ _Answer here._
 
 ---
 
-## 3. Serving under load  *(rubric 7, 8, 9 — 20 pts)*
+## 3. Serving under load  *(rubric 8, 9, 10 — 20 điểm)*
 
 > Từ `benchmarks/02-server-results.md` (`make load-report`).
 
@@ -77,7 +77,7 @@ _Answer here._
 
 ---
 
-## 4. Integration  *(rubric 10, 11 — 15 pts)*
+## 4. Integration  *(rubric 12, 13 — 15 điểm)*
 
 > Từ `make pipeline`. Nói thật cái nào real, cái nào stub — stub **không** mất điểm.
 
@@ -103,7 +103,7 @@ _Answer here._
 
 ---
 
-## 5. The single change that mattered most  *(rubric 13 — 10 pts)*
+## 5. The single change that mattered most  *(rubric 11 — 10 điểm)*
 
 > **Phần quan trọng nhất của report.** Không cần bonus track: `make tune` đã cho bạn
 > một before/after thật (`benchmarks/01-tuning-tg128.md`). Đổi quantization,
@@ -128,7 +128,7 @@ _Answer here._
 
 ---
 
-## 6. Bonus  *(optional — tối đa 20 pts)*
+## 6. Bonus  *(optional — tối đa 20 điểm)*
 
 > Bỏ trống nếu không làm. Xem `bonus/README.md`. Đừng làm hết — **một** finding sâu
 > ăn điểm hơn năm bảng nông.

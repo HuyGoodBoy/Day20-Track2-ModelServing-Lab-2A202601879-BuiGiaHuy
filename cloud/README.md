@@ -1,5 +1,7 @@
 # Cloud fallback — Colab / Kaggle
 
+> Các bước của lab giống hệt bản laptop: **[GUIDE.md](../GUIDE.md)**
+
 **For students whose laptop cannot run the lab.** Gemma 4 E2B needs ~4 GB of RAM for
 inference, so the lab's floor is **8 GB**. Below that — or if setup fails for a reason
 you cannot fix — run [`Day20-lab.ipynb`](Day20-lab.ipynb) instead.
@@ -72,7 +74,7 @@ clone, then:
 | Kaggle "no internet" | Settings sidebar → Internet → On. |
 | Colab free tier timed out | Shorten the load runs: set `LOAD_DURATION = '30s'` in cell 1. |
 | `unknown model architecture: 'gemma4'` | The runtime fetch was skipped or failed. Re-run section 4. |
-| Out of disk | Free tiers give plenty for 5.2 GB, but delete `models/*Q2*` if you must — then you lose rubric items 3/4's second row. |
+| Out of disk | Free tiers give plenty for 5.2 GB, but delete `models/*Q2*` if you must — then you lose the second row of rubric items 3-5. |
 
 ## A caveat worth writing about
 

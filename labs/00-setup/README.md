@@ -57,3 +57,5 @@ read the environment directly, so `LAB_N_THREADS=6 make bench` works too.
 ```bash
 make bench
 ```
+
+Step-by-step walkthrough for the whole lab: [`GUIDE.md`](../../GUIDE.md)

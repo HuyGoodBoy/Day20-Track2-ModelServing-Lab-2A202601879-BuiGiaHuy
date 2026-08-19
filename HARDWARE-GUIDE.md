@@ -1,5 +1,7 @@
 # Hardware Guide
 
+> Cách làm lab từng bước: **[GUIDE.md](GUIDE.md)** · Chấm điểm: [`rubric.md`](rubric.md)
+
 > **Laptop của bạn *là* lab.** Không có shared sandbox. Rubric thưởng độ rõ ràng
 > của *your own before/after*, không phải absolute throughput. Đừng so số với bạn
 > cùng lớp — so với `make bench` lần đầu của chính bạn.

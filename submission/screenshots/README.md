@@ -12,7 +12,7 @@ so they sort in run order.
 |---|---|---|---|
 | 1 | `01-hardware-probe.png` | `make probe` | CPU, cores, RAM, accelerator, chosen llama.cpp build |
 | 2 | `02-bench.png` | `make bench` | The results table — both quantizations, TTFT and TPOT columns |
-| 3 | `03-serve-and-smoke.png` | `make serve` + `make smoke` | Server listening **and** a completion **and** non-zero `llamacpp:tokens_predicted_total` (rubric items 5 **and** 6 in one shot) |
+| 3 | `03-serve-and-smoke.png` | `make serve` + `make smoke` | Server listening **and** a completion **and** non-zero `llamacpp:tokens_predicted_total` (rubric items 6 **and** 7 in one shot) |
 | 4 | `04-locust-10.png` | `make load-10` | Locust summary: request count, RPS, and the 50%/95%/99% columns |
 | 5 | `05-locust-50.png` | `make load-50` | Same, at 50 users |
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """02 - Smoke-test the running server: OpenAI-compat call + /metrics proof.
 
-Produces the evidence for rubric items 5 and 6 in one run. Screenshot this.
+Produces the evidence for rubric items 6 and 7 in one run. Screenshot this.
 
     make serve      # terminal 1
     make smoke      # terminal 2
@@ -80,7 +80,7 @@ def main() -> int:
               f"{t.get('predicted_ms', 0):.0f} ms  ->  "
               f"{t.get('predicted_per_second', 0):.1f} tok/s")
 
-    print(f"\n==> GET {base}/metrics   (rubric item 6 -- screenshot this)")
+    print(f"\n==> GET {base}/metrics   (rubric item 7 -- screenshot this)")
     after = read_metrics(base)
     if not after:
         labkit.die(
