@@ -7,10 +7,9 @@ và **file nào được sinh ra** (file đó chính là điểm).
 
 ```
 PHASE 0  Setup                 ~20 phút
-PHASE 1  Base track (100 pts)  ~2 giờ      ← bắt buộc
-PHASE 2  Bonus track (20 pts)  ~1-2 giờ    ← optional, làm SAU khi base xong
-PHASE 3  Codex review          ~10 phút    ← cổng kiểm tra trước khi submit
-PHASE 4  Submit                ~5 phút
+PHASE 1  Base track (100 điểm)  ~2 giờ      ← bắt buộc
+PHASE 2  Bonus track (20 điểm)  ~1-2 giờ    ← optional, làm SAU khi base xong
+PHASE 3  Submit                 ~5 phút
 ```
 
 > **Quy tắc vàng:** mọi file `benchmarks/*.md` mà lab sinh ra đều có một section
@@ -258,50 +257,7 @@ line"* — vẫn phải điền.
 
 ---
 
-# PHASE 3 — Nhờ Codex review trước khi submit
-
-Trước khi push, dùng một coding agent (**Codex CLI**, Claude Code, Cursor — cái nào cũng
-được) để soát lại repo. `make verify` chỉ kiểm tra **file có tồn tại**; agent kiểm tra
-được **nội dung có hợp lý**.
-
-Mở agent ở thư mục repo và paste nguyên đoạn này:
-
-```text
-Bạn là trợ lý review submission. Repo này là bài lab Day 20 (Model Serving).
-
-Đọc rubric.md, rồi kiểm tra repo của tôi so với TỪNG tiêu chí trong đó.
-
-Với mỗi tiêu chí, báo cáo: PASS / FAIL / KHÔNG CHẮC + file nào là bằng chứng.
-Cụ thể kiểm tra:
-1. hardware.json và models/active.json có tồn tại và hợp lệ không?
-2. Mọi file benchmarks/*.md còn sót section "required -- replace this line" không?
-3. submission/REFLECTION.md còn placeholder nào chưa điền không?
-   Có section nào tôi để trống hoặc trả lời quá sơ sài không?
-4. Số liệu trong REFLECTION có KHỚP với số trong benchmarks/*.md không?
-   (Đây là lỗi hay gặp: copy sai, hoặc chỉnh tay rồi quên cập nhật.)
-5. submission/screenshots/ có đủ 5 ảnh theo submission/screenshots/README.md không?
-6. REFLECTION §5 có giải thích được CƠ CHẾ (bandwidth/cache/scheduling) không,
-   hay chỉ là "vibes-based" và bullet số liệu?
-7. Có file nào tôi vô tình commit mà đáng lẽ không nên (models/*.gguf, runtime/) không?
-
-QUAN TRỌNG — giới hạn của bạn:
-- KHÔNG viết hộ tôi phần nhận xét, giải thích hay reflection. Đó là phần bị chấm
-  và phải là của tôi.
-- KHÔNG bịa hay đoán số liệu. Nếu thiếu số, báo là thiếu.
-- Chỉ chỉ ra chỗ nào yếu/thiếu và hỏi tôi câu hỏi để tôi tự viết cho tốt hơn.
-
-Cuối cùng: liệt kê những việc tôi phải làm trước khi submit, xếp theo mức quan trọng.
-```
-
-Sửa những gì agent chỉ ra, chạy lại `make verify`, rồi sang PHASE 4.
-
-> **Lưu ý học thuật:** dùng agent để **soát lỗi và đặt câu hỏi** là hợp lệ và được
-> khuyến khích. Để agent **viết hộ phần phân tích** thì không — §5 và §3 là chỗ grader
-> đánh giá tư duy của bạn, và một đoạn văn do AI viết thì đọc ra ngay.
-
----
-
-# PHASE 4 — Submit
+# PHASE 3 — Submit
 
 1. `make verify` → **exit 0** (chạy lần cuối)
 2. Fork/copy repo lên GitHub account của bạn, set **public**

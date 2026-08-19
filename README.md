@@ -67,24 +67,7 @@ Làm **theo đúng thứ tự này**. Đừng nhảy vào bonus trước khi bas
 └──────────────────────────────────────────────────────────────────┘
                                  │
                                  ▼
-┌─ 3 ─ CODEX REVIEW ─────────────────────── ~10 phút · nên làm ────┐
-│                                                                  │
-│   Mở Codex CLI (hoặc Claude Code / Cursor) ở thư mục repo,        │
-│   paste prompt review có sẵn trong GUIDE.md → PHASE 3.           │
-│                                                                  │
-│   make verify chỉ kiểm tra FILE CÓ TỒN TẠI.                      │
-│   Agent kiểm tra được NỘI DUNG có hợp lý:                        │
-│     · còn section "replace this line" nào chưa điền?             │
-│     · số trong REFLECTION có khớp benchmarks/*.md?               │
-│     · §5 có giải thích cơ chế, hay chỉ "vibes-based"?            │
-│     · có commit nhầm models/*.gguf không?                        │
-│                                                                  │
-│   Agent CHỈ ĐƯỢC soát lỗi và đặt câu hỏi.                        │
-│   KHÔNG để agent viết hộ phần phân tích — đó là phần bị chấm.     │
-└──────────────────────────────────────────────────────────────────┘
-                                 │
-                                 ▼
-┌─ 4 ─ SUBMIT ──────────────────────────────────────── ~5 phút ────┐
+┌─ 3 ─ SUBMIT ──────────────────────────────────────── ~5 phút ────┐
 │   make verify → exit 0  ·  repo PUBLIC  ·  paste URL vào LMS      │
 └──────────────────────────────────────────────────────────────────┘
 ```

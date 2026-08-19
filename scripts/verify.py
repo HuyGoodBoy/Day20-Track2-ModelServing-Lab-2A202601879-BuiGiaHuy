@@ -187,12 +187,10 @@ def main() -> int:
     if r.notes:
         print(f"  ({len(r.notes)} informational note(s) above — none block submission.)")
     print()
-    print("  This checked that the FILES exist. It cannot check whether your numbers agree")
-    print("  with each other or whether your explanations hold up. Before you push, run the")
-    print("  review step in GUIDE.md (PHASE 3): paste the prompt there into Codex CLI /")
-    print("  Claude Code / Cursor and let it cross-check your repo against rubric.md.")
+    print("  Note: this checks that the files exist. It cannot check that your numbers agree")
+    print("  with each other -- re-read benchmarks/*.md against REFLECTION.md before pushing.")
     print()
-    print("  Then: commit, push to a PUBLIC GitHub repo, paste the URL into the LMS.")
+    print("  Next: commit, push to a PUBLIC GitHub repo, paste the URL into the LMS.")
     return 0
 
 

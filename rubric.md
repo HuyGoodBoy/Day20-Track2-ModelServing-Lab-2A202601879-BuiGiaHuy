@@ -119,23 +119,6 @@ Chi tiết + tips: [`submission/screenshots/README.md`](submission/screenshots/R
 
 ---
 
-## Nên làm: nhờ Codex review trước khi submit
-
-**Không có điểm cho bước này**, nhưng nó là cách rẻ nhất để không mất điểm ngớ ngẩn.
-
-`make verify` chỉ kiểm tra **file có tồn tại**. Một coding agent (Codex CLI, Claude Code,
-Cursor) kiểm tra được **nội dung có hợp lý**: số trong REFLECTION có khớp
-`benchmarks/*.md` không, §5 có giải thích cơ chế hay chỉ là bullet số, có commit nhầm file
-nặng không.
-
-Prompt có sẵn: [GUIDE.md → PHASE 3](GUIDE.md).
-
-> **Giới hạn:** dùng agent để **soát lỗi và đặt câu hỏi** là hợp lệ và được khuyến khích.
-> Để agent **viết hộ phần phân tích** thì không — điểm 10 và 11 là chỗ grader đánh giá tư
-> duy của bạn, và một đoạn do AI viết thì đọc ra ngay.
-
----
-
 ## Những cách mất điểm hay gặp
 
 | Mất điểm vì | Tránh bằng cách |
@@ -145,7 +128,7 @@ Prompt có sẵn: [GUIDE.md → PHASE 3](GUIDE.md).
 | Còn sót section **"required — replace this line"** trong `benchmarks/*.md` | `make verify` sẽ fail. Đọc và điền hết |
 | REFLECTION còn placeholder `<Họ Tên>`, `_Answer here._` | `make verify` sẽ fail |
 | §5 chỉ ghi số, không giải thích | Nói rõ cơ chế. Đây là 10 điểm |
-| Số trong REFLECTION không khớp `benchmarks/*.md` | Codex review ở PHASE 3 bắt được lỗi này |
+| Số trong REFLECTION không khớp `benchmarks/*.md` | Đọc lại `benchmarks/*.md` rồi copy đúng số trước khi push |
 | Commit `models/*.gguf` (5 GB) | Đã có trong `.gitignore` — đừng `git add -f` |
 | Không khai báo đã dùng Colab/Kaggle | Ghi 1 dòng ở REFLECTION §1. Khai báo thì **không mất điểm**; không khai báo thì mất |
 | Nói pipeline là "real" khi đang stub | Stub **không mất điểm**. Nói dối mới mất (điểm 13) |
@@ -159,11 +142,10 @@ Prompt có sẵn: [GUIDE.md → PHASE 3](GUIDE.md).
 1. Fork/copy repo này lên GitHub account của bạn, set **public**
 2. Hoàn thành base track (`make verify` exit 0)
 3. (Optional) làm bonus
-4. (Nên) nhờ Codex review — [GUIDE.md PHASE 3](GUIDE.md)
-5. Add 5 screenshots vào `submission/screenshots/`
-6. Điền `submission/REFLECTION.md`
-7. `make verify` → **exit 0**
-8. Push, paste public URL vào ô submission Day 20 trên LMS
+4. Add 5 screenshots vào `submission/screenshots/`
+5. Điền `submission/REFLECTION.md`
+6. `make verify` → **exit 0**
+7. Push, paste public URL vào ô submission Day 20 trên LMS
 
 ---
 
