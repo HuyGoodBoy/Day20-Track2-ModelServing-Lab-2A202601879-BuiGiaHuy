@@ -30,13 +30,15 @@ thêm một dòng giải thích.
 
 | Nền tảng | Cách mở |
 |---|---|
-| **Colab** | Mở [colab.research.google.com](https://colab.research.google.com) → File → Open notebook → GitHub → paste URL fork của bạn → chọn `cloud/Day20-lab.ipynb` |
+| **Colab** | Mở trực tiếp: [colab.research.google.com/github/VinUni-AI20k/Day20-Track2-ModelServing/blob/main/cloud/Day20-lab.ipynb](https://colab.research.google.com/github/VinUni-AI20k/Day20-Track2-ModelServing/blob/main/cloud/Day20-lab.ipynb) — hoặc File → Open notebook → GitHub → paste URL repo |
 | **Kaggle** | Mở [kaggle.com/code](https://www.kaggle.com/code) → New Notebook → File → Import Notebook → upload `cloud/Day20-lab.ipynb` |
 
 **Trên Kaggle, phải bật Internet** trong settings sidebar trước khi chạy. Nếu Internet
 tắt, notebook không thể tải model.
 
-Trong cell đầu tiên, sửa `REPO_URL` để trỏ tới fork của **bạn**.
+Cell đầu tiên đã trỏ sẵn tới repo gốc (public) nên bạn chạy được ngay. Đổi `REPO_URL`
+sang fork của bạn nếu muốn — không bắt buộc, vì artifact được sinh trong VM rồi bạn
+tải zip về máy.
 
 ## CPU hay GPU?
 
