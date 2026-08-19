@@ -1,85 +1,174 @@
-# Day 20 Lab — Grading Rubric (100 pts core + 20 bonus)
+# Rubric — Day 20 Lab (100 điểm base + 20 bonus)
 
-Track-2 Daily Lab weight = 30%.
+Track-2 Daily Lab, trọng số **30%**.
 
-> **Personal report.** Lab này dành cho laptop cá nhân của học viên. Số liệu của bạn không so sánh được với bạn cùng lớp — grade phụ thuộc **độ rõ ràng của setup + tuning của bạn trên chính máy bạn**, không phải tốc độ tuyệt đối. Một bạn dùng laptop Air M1 8 GB và một bạn dùng workstation RTX 4090 cùng được điểm tối đa nếu cả hai đều có rubric output đầy đủ + writeup mạch lạc.
+> **Đây là báo cáo cá nhân.** Mỗi bạn chạy trên máy mình. Số liệu của bạn **không** so
+> sánh được với bạn cùng lớp — chỉ so **before vs after trên chính máy bạn**. Rubric chấm
+> **độ rõ ràng của setup + đo lường + lập luận**, không chấm tốc độ tuyệt đối.
+> Air M1 8 GB và RTX 5090 đều có thể đạt 100/100.
+>
+> **Toàn bộ 100 điểm base không cần GPU, không cần compiler, không cần Docker.**
 
-Submit screenshots + artifacts in repo. The rubric is checked against **what's actually committed**, not what you say you did.
+Grader chấm **file thật trong repo của bạn**, không chấm những gì bạn nói bạn đã làm.
 
----
-
-## Core (100 pts)
-
-| # | Track | Criterion | Evidence | Pts |
-|---|---|---|---|---:|
-| 1 | 00-setup | `hardware.json` committed; `detect-hardware.py` ran clean | `submission/screenshots/01-hardware-probe.png` + `hardware.json` in repo | 5 |
-| 2 | 00-setup | `models/active.json` committed; primary GGUF file path resolves | `models/active.json` shows valid path; can be either auto-downloaded or manual per `MANUAL-DOWNLOAD.md` | 5 |
-| 3 | 01-quickstart | `benchmark.py` produces a P50/P95/P99 table for **both** Q4_K_M and Q2_K | `benchmarks/01-quickstart-results.md` exists, has 2-row table | 10 |
-| 4 | 01-quickstart | TTFT and TPOT reported separately (not just E2E) | Same file; values plausible (TTFT > 0, TPOT > 0) | 5 |
-| 5 | 02-server | `llama-server` runs and serves OpenAI-compat `/v1/chat/completions` | `submission/screenshots/03-server-running.png` showing both server log and a successful `curl` | 10 |
-| 6 | 02-server | `/metrics` from the **native** server (`make serve-native`) shows non-zero `llamacpp:tokens_predicted_total` after a request | `curl :8080/metrics` excerpt (Python `make serve` has no /metrics — build via `make build-llama`) | 5 |
-| 7 | 02-server | locust load run at `-u 10` for 60s, P95 reported | `submission/screenshots/04-locust-10.png` + table in REFLECTION.md §3 | 10 |
-| 8 | 02-server | locust load run at `-u 50` for 60s, P95 reported | `submission/screenshots/05-locust-50.png` + table in REFLECTION.md §3 | 10 |
-| 9 | 02-server | Continuous-batching observation under load (peak `llamacpp:n_busy_slots_per_decode` / `requests_processing`) from the native server reported in writeup | REFLECTION.md §3 — observation paragraph; CSV from `make metrics` (needs `make serve-native`) optional but recommended | 5 |
-| 10 | 03-integration | `pipeline.py` runs end-to-end (3 example queries) and prints retrieved-context provenance | Terminal screenshot or paste in REFLECTION.md §4 | 10 |
-| 11 | 03-integration | At least 3 of N16/N17/N18/N19 wired (or explicitly stubbed with reason) | REFLECTION.md §4 enumerates which pieces are real vs stubbed | 5 |
-| 12 | submission | REFLECTION.md filled — every section has student-supplied content (not just template placeholders) | `make verify` exit code 0 | 10 |
-| 13 | submission | "Single change that mattered most" paragraph (REFLECTION.md §5) — explains WHY, not just numbers | Section 5 reads as a coherent argument, not bullet dump | 10 |
-| 14 | repo | Reproducibility — from clean clone, `make setup && make bench && make verify` produces the numbers in REFLECTION.md | Reviewable from commit history + `make verify` output | 10 |
-|   |   | **Core total** |  | **100** |
+Cách làm từng bước: **[GUIDE.md](GUIDE.md)**
 
 ---
 
-## Bonus (20 pts, optional)
+## Base track — 100 điểm
 
-| Criterion | Evidence | Pts |
-|---|---|---:|
-| Built llama.cpp from source for your hardware (any backend) | `BONUS-llama-cpp-optimization/llama.cpp/build/bin/llama-bench --version` runs | 4 |
-| Ran at least one sweep (`thread / quant / ctx-len / batch-size / gpu-offload`) and committed `benchmarks/bonus-*.md` | File exists in repo with non-trivial table | 4 |
-| Bonus speedup quantified — before/after numbers in REFLECTION.md §5 | "before: X tok/s, after: Y tok/s, speedup: Z×" pattern | 4 |
-| Attempted at least one open challenge from `BONUS-llama-cpp-optimization/CHALLENGES.md` (C1–C7) | Writeup section in REFLECTION.md or extra file `bonus/<challenge>.md` | 4 |
-| MLX comparison run (Apple Silicon only) | `benchmarks/bonus-mlx-vs-llama-cpp.md` committed | 4 |
-|  | **Bonus total** | **20** |
+### Phần A · Setup (10 điểm)
 
-The bonus does **not** affect your core grade negatively; missing it is fine. A **strong** bonus submission gets a substantive instructor written review focused on reasoning quality (not raw numbers).
+| # | Được điểm khi | Lệnh sinh ra bằng chứng | Điểm |
+|--:|---|---|--:|
+| 1 | `hardware.json` có trong repo. Nếu bạn chạy trên Colab/Kaggle thì khai báo ở REFLECTION §1 | `make probe` | 5 |
+| 2 | `models/active.json` có trong repo và hợp lệ | `make setup` | 5 |
+
+### Phần B · Đo lường (20 điểm)
+
+| # | Được điểm khi | Lệnh | Điểm |
+|--:|---|---|--:|
+| 3 | Có bảng latency cho **cả hai** quantization, đủ percentile | `make bench` | 10 |
+| 4 | **TTFT và TPOT báo riêng**, không gộp thành end-to-end | `make bench` | 5 |
+| 5 | Có nhận xét của bạn về 2-bit vs 4-bit — nhanh hơn bao nhiêu, **và có đáng không** | bạn viết vào `benchmarks/01-quickstart-results.md` | 5 |
+
+### Phần C · Serving (25 điểm)
+
+| # | Được điểm khi | Lệnh | Điểm |
+|--:|---|---|--:|
+| 6 | `llama-server` phục vụ được `/v1/chat/completions` | `make serve` + `make smoke` | 10 |
+| 7 | `/metrics` có `llamacpp:tokens_predicted_total` **khác 0** sau request | `make smoke` (in ra sẵn) | 5 |
+| 8 | Load test ở **cả** 10 và 50 users, 60s mỗi lần | `make load-10` · `make load-50` | 5 |
+| 9 | **Continuous batching quan sát được** — peak `n_busy_slots_per_decode` dưới load | `make metrics` **khi** `make load-50` đang chạy | 5 |
+
+### Phần D · Phân tích (20 điểm)
+
+| # | Được điểm khi | Ở đâu | Điểm |
+|--:|---|---|--:|
+| 10 | **Saturation reading** — server bão hoà ở đâu, bằng chứng nào. RPS có plateau? P95 phồng lên bao nhiêu? Effective concurrency so với số slot? | `make load-report` → bạn viết vào `benchmarks/02-server-results.md` | 10 |
+| 11 | **"Thay đổi quan trọng nhất"** — before/after thật + giải thích **cơ chế** | REFLECTION §5 | 10 |
+
+### Phần E · Integration (15 điểm)
+
+| # | Được điểm khi | Ở đâu | Điểm |
+|--:|---|---|--:|
+| 12 | `pipeline.py` chạy hết 3 query và in ra context đã retrieve | `make pipeline` | 10 |
+| 13 | Khai báo **cái nào real / cái nào stub** trong N16–N19, **và** latency chia theo stage (embed / retrieve / llm) | REFLECTION §4 | 5 |
+
+### Phần F · Submission (10 điểm)
+
+| # | Được điểm khi | Ở đâu | Điểm |
+|--:|---|---|--:|
+| 14 | REFLECTION.md điền đầy đủ · `make verify` **exit 0** · 5 screenshots | `make verify` | 10 |
+
+**Tổng base: 100 điểm**
 
 ---
 
-## Submission
+## Điểm 11 — phần nặng nhất, và cách lấy nó mà **không** cần bonus
+
+`make tune` sweep thread count bằng `llama-bench` — **không compiler, không GPU** — rồi
+ghi ra `benchmarks/01-tuning-tg128.md` kèm before/after và tỉ lệ speedup. File đó là đủ
+cho điểm 11.
+
+Đổi quantization, `LAB_N_CTX`, hoặc `--parallel` rồi đo lại cũng được.
+
+**Cái được chấm là phần giải thích, không phải độ lớn con số.** Một speedup 1.06× được
+giải thích đúng cơ chế ăn điểm cao hơn 3× nhưng chỉ ghi "nó nhanh hơn".
+
+Bám vào cơ chế cụ thể: memory bandwidth? vector width? cache residency? queueing?
+**Nếu kết quả khác kỳ vọng từ deck → nói rõ và giải thích.** Đó là chỗ ăn điểm, không
+phải chỗ mất điểm.
+
+---
+
+## Bonus track — 20 điểm (optional)
+
+Mọi tiêu chí đều đạt được trên **bất kỳ** nền tảng. B5 có 4 lựa chọn nên Apple Silicon
+là *một* option, không phải điều kiện.
+
+| # | Được điểm khi | Lệnh | Điểm |
+|--:|---|---|--:|
+| B1 | Compile llama.cpp cho CPU của bạn và **so với prebuilt binary** | `make build-llama && make compare-builds` | 4 |
+| B2 | Chạy ít nhất 1 sweep | `make sweep-quant` / `sweep-ctx` / `sweep-batch` / `sweep-gpu` | 4 |
+| B3 | Speedup **của bonus track** có before/after rõ ràng | REFLECTION §6 (từ B1 hoặc B2, **không** phải kết quả `make tune` của base) | 4 |
+| B4 | Làm ít nhất 1 challenge C1–C7 | `bonus/CHALLENGES.md` | 4 |
+| B5 | Một so sánh runtime/regime — **chọn 1**: MLX (Mac) · C8 semantic cache · C9 embedding serving · C6 Vulkan vs CUDA | `make mlx-compare` · `make semantic-cache` · `make embed-demo` | 4 |
+
+**Tổng bonus: 20 điểm**
+
+Bonus **không** làm giảm điểm base. Bỏ hẳn bonus vẫn ổn. Submission bonus **tốt** được
+instructor viết review riêng, tập trung vào chất lượng lập luận.
+
+**Đừng làm hết.** *Một* finding giải thích sâu > năm bảng số nông.
+
+---
+
+## 5 screenshots bắt buộc
+
+Tất cả đều từ base track — **không cái nào cần bonus, GPU, hay compiler.**
+Chi tiết + tips: [`submission/screenshots/README.md`](submission/screenshots/README.md)
+
+| # | File | Từ lệnh |
+|--:|---|---|
+| 1 | `01-hardware-probe.png` | `make probe` |
+| 2 | `02-bench.png` | `make bench` (bảng kết quả) |
+| 3 | `03-serve-and-smoke.png` | `make serve` + `make smoke` (điểm 6 **và** 7 trong 1 ảnh) |
+| 4 | `04-locust-10.png` | `make load-10` |
+| 5 | `05-locust-50.png` | `make load-50` |
+
+---
+
+## Những cách mất điểm hay gặp
+
+| Mất điểm vì | Tránh bằng cách |
+|---|---|
+| Repo để **private** → grader không xem được | Set **public** cho tới khi có điểm. Private = **0 điểm** |
+| `make metrics` chạy khi server rảnh → `busy_slots ≈ 1`, không có bằng chứng batching | Chạy `make metrics` **chồng thời gian** với `make load-50` (điểm 9) |
+| Còn sót section **"required — replace this line"** trong `benchmarks/*.md` | `make verify` sẽ fail. Đọc và điền hết |
+| REFLECTION còn placeholder `<Họ Tên>`, `_Answer here._` | `make verify` sẽ fail |
+| §5 chỉ ghi số, không giải thích | Nói rõ cơ chế. Đây là 10 điểm |
+| Số trong REFLECTION không khớp `benchmarks/*.md` | Đọc lại `benchmarks/*.md` rồi copy đúng số trước khi push |
+| Commit `models/*.gguf` (5 GB) | Đã có trong `.gitignore` — đừng `git add -f` |
+| Không khai báo đã dùng Colab/Kaggle | Ghi 1 dòng ở REFLECTION §1. Khai báo thì **không mất điểm**; không khai báo thì mất |
+| Nói pipeline là "real" khi đang stub | Stub **không mất điểm**. Nói dối mới mất (điểm 13) |
+
+---
+
+## Cách submit
 
 **KHÔNG cần PR — chỉ submit GitHub URL công khai vào VinUni LMS.**
 
-1. Fork hoặc copy repo này lên GitHub account của bạn, set repo **public**.
-2. Hoàn thành 4 tracks (`00-setup` → `01-quickstart` → `02-server` → `03-integration`).
-3. Add screenshots vào `submission/screenshots/` (xem danh sách trong `submission/screenshots/README.md`).
-4. Điền `submission/REFLECTION.md` đầy đủ.
-5. Chạy `make verify` ở root — đảm bảo exit code 0.
-6. Push lên public repo.
-7. Paste public GitHub URL vào ô submission của Day 20 trong VinUni LMS.
+1. Fork/copy repo này lên GitHub account của bạn, set **public**
+2. Hoàn thành base track (`make verify` exit 0)
+3. (Optional) làm bonus
+4. Add 5 screenshots vào `submission/screenshots/`
+5. Điền `submission/REFLECTION.md`
+6. `make verify` → **exit 0**
+7. Push, paste public URL vào ô submission Day 20 trên LMS
 
-**Quan trọng:** Repo phải **public** đến khi điểm được công bố. Nếu private, grader không xem được → 0 điểm.
+---
+
+## Grader chạy repo của bạn như thế nào
+
+```bash
+git clone https://github.com/<you>/<your-repo>
+cd <your-repo>
+cat hardware.json models/active.json          # điểm 1, 2
+cat benchmarks/01-quickstart-results.md       # điểm 3, 4, 5
+cat benchmarks/02-server-results.md           # điểm 10
+cat benchmarks/02-server-batching*.md         # điểm 9
+ls submission/screenshots/                    # điểm 6, 7, 8
+cat submission/REFLECTION.md                  # điểm 11, 12, 13
+make verify                                   # điểm 14 — exit 0?
+ls benchmarks/bonus-*.md                      # bonus
+```
+
+`make verify` chỉ kiểm tra **file đã commit**. Model weights và runtime binary nằm trong
+`.gitignore` có chủ đích, nên việc grader không có chúng **không bao giờ** là lỗi.
 
 ---
 
 ## Late policy / regrade
 
-Standard Track-2 policy applies — see `INDEX-Track2.md` ở repo course material.
-
----
-
-## How the grader runs your repo
-
-The grader does roughly this on your committed repo:
-
-```bash
-git clone https://github.com/<you>/Day20-Track2-ModelServing-Lab
-cd Day20-Track2-ModelServing-Lab
-cat hardware.json                                        # Q1, Q2 evidence
-cat benchmarks/01-quickstart-results.md                  # Q3, Q4
-ls submission/screenshots/                               # Q5–Q11 visual evidence
-cat submission/REFLECTION.md                             # Q12, Q13
-make verify                                              # Q14 — exits 0?
-ls benchmarks/bonus-*.md                                 # bonus
-```
-
-If `make verify` exits non-zero, the grader may deduct Q14's 10 pts even if the rest is fine — so run it before you push.
+Theo policy chuẩn của Track-2 — xem `INDEX-Track2.md` trong repo course material.

@@ -1,18 +1,11 @@
-# Day 20 lab — Python dependencies (cross-platform).
-# llama-cpp-python is installed separately by the platform setup script
-# so it can be built with Metal/CUDA/Vulkan flags depending on hardware.
+# Day 20 lab - Python dependencies.
+#
+# There is no llama-cpp-python here on purpose. The lab uses the prebuilt
+# llama.cpp release binaries (fetched by labs/00-setup/fetch-runtime.py), which
+# need no compiler and are new enough to load Gemma 4. Everything below is pure
+# Python and installs in seconds.
 
-huggingface_hub>=0.24.0
-numpy>=1.26.0
-requests>=2.32.0
-
-# Benchmarking / load testing
-locust>=2.30.0          # 02-llama-cpp-server load test
-httpx>=0.27.0           # async client for benchmarks
-tabulate>=0.9.0         # pretty-print results tables
-
-# Observability scratchpad
-matplotlib>=3.8.0       # latency histograms in benchmarks/
-
-# Notebook-friendly (optional but useful for student exploration)
-ipykernel>=6.29.0
+huggingface_hub>=0.24.0   # model download (labs/00-setup/download-model.py)
+httpx>=0.27.0             # HTTP client for every track that talks to llama-server
+locust>=2.30.0            # load testing (labs/02-serve/load-test.py)
+numpy>=1.26.0             # cosine similarity in the bonus serving-regime demos

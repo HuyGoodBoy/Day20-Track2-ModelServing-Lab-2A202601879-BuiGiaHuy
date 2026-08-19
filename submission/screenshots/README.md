@@ -1,24 +1,39 @@
-# Required screenshots
+# Screenshots
 
-Drop the following PNG/JPG files into this folder before submitting. Filenames are suggested, not required — grader reads `REFLECTION.md` to map screenshots to evidence.
+**5 required.** All five come from the core path — none need bonus work, a GPU, or a
+compiler. `make verify` counts files here and fails below 5.
 
-## Minimum (6 shots)
+Filenames are suggestions; the grader maps them via your REFLECTION. Keep the numbering
+so they sort in run order.
 
-1. **`01-hardware-probe.png`** — terminal output of `python 00-setup/detect-hardware.py`. Must show CPU, RAM, accelerator, recommended model tier.
-2. **`02-quickstart-bench.png`** — terminal output of `python 01-llama-cpp-quickstart/benchmark.py` showing the per-prompt TTFT/TPOT/E2E table.
-3. **`03-server-running.png`** — the server running (terminal showing it listening on `http://0.0.0.0:8080`, from `make serve`). The `/metrics` excerpt is separate evidence (rubric item 6) and comes from the **native** server (`make serve-native`) — the Python server has no `/metrics`.
-4. **`04-locust-10.png`** — locust headless summary table after `-u 10 -t 1m`. Must show RPS + P50/P95/P99.
-5. **`05-locust-50.png`** — same but `-u 50 -t 1m`.
-6. **`06-bonus-sweep.png`** — at least one chart or terminal table from `BONUS-llama-cpp-optimization/benchmarks/*.py` (thread / quant / ctx-len / gpu-offload / batch-size). Pick the one with the most interesting result on your hardware.
+## Required
 
-## Optional (extra credit, mentioned in `rubric.md`)
+| # | File | Command | Must show |
+|---|---|---|---|
+| 1 | `01-hardware-probe.png` | `make probe` | CPU, cores, RAM, accelerator, chosen llama.cpp build |
+| 2 | `02-bench.png` | `make bench` | The results table — both quantizations, TTFT and TPOT columns |
+| 3 | `03-serve-and-smoke.png` | `make serve` + `make smoke` | Server listening **and** a completion **and** non-zero `llamacpp:tokens_predicted_total` (rubric items 6 **and** 7 in one shot) |
+| 4 | `04-locust-10.png` | `make load-10` | Locust summary: request count, RPS, and the 50%/95%/99% columns |
+| 5 | `05-locust-50.png` | `make load-50` | Same, at 50 users |
 
-7. **`07-grafana-or-prom.png`** — if you ran the optional Prometheus container, show a Grafana panel or the Prometheus query UI with `llamacpp:n_busy_slots_per_decode` (or `requests_processing`) plotted.
-8. **`08-mlx-vs-llamacpp.png`** — Apple Silicon students who ran the MLX bonus.
-9. **`09-pipeline-output.png`** — `python 03-milestone-integration/pipeline.py` end-to-end output.
+For #3 you can either split the terminal or take two shots named `03a-` and `03b-` —
+both count as one item.
+
+## Optional (support your writeup; no extra points on their own)
+
+| File | Command |
+|---|---|
+| `06-tune.png` | `make tune` — the thread curve behind REFLECTION §5 |
+| `07-batching.png` | `make metrics` — peak `n_busy_slots_per_decode` under load |
+| `08-pipeline.png` | `make pipeline` — contexts, timings, answers |
+| `09-bonus.png` | any `benchmarks/bonus-*.md` table you produced |
 
 ## Tips
 
-- Crop tight — full-screen browser shots get rejected. The grader wants to see the data, not your wallpaper.
-- Dark or light terminal both fine; just make sure text is readable.
-- For load-test screenshots, include the locust *Type · Name · # reqs · Median · Avg · 95%ile · 99%ile* row — that's the rubric evidence.
+- **Crop tight.** Full-screen desktop shots get rejected. Show the data, not your wallpaper.
+- Dark or light terminal is fine — just make sure the text is legible when zoomed.
+- For locust, include the `Type · Name · # reqs · Median · 95%ile · 99%ile` row. That row
+  *is* the evidence for item 8.
+- PNG or JPG. Keep each under ~2 MB so your repo stays quick to clone.
+- Take #3 **after** `make smoke` has actually printed the metrics delta — a screenshot of
+  a server sitting idle does not show item 6.

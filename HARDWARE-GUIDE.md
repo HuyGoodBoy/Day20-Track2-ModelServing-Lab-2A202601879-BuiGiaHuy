@@ -1,62 +1,123 @@
-# Hardware Guide — Pick Your Path
+# Hardware Guide
 
-> **Your laptop's spec is the lab.** Lab này không có shared sandbox — mỗi học viên chạy trên máy mình. Grading rubric thưởng độ rõ ràng của *your own before/after*, không phải absolute throughput. Một bạn dùng Air M1 8 GB và một bạn dùng RTX 4090 đều có thể đạt full marks. Đừng so số liệu của bạn với bạn cùng lớp — so với chính `make bench` lần đầu của bạn.
+> Cách làm lab từng bước: **[GUIDE.md](GUIDE.md)** · Chấm điểm: [`rubric.md`](rubric.md)
 
-Use this chart to pick a model, a quantization, and a llama.cpp backend that will actually run on **your** hardware.
+> **Laptop của bạn *là* lab.** Không có shared sandbox. Rubric thưởng độ rõ ràng
+> của *your own before/after*, không phải absolute throughput. Đừng so số với bạn
+> cùng lớp — so với `make bench` lần đầu của chính bạn.
 
-## 1. Model size by RAM
+## 1. Điều kiện tối thiểu
 
-| Available RAM | Recommended model (GGUF) | Quantization | File size |
-|---|---|---|---|
-| 4 GB | TinyLlama-1.1B | Q4_K_M | ≈ 0.7 GB |
-| 8 GB | Qwen2.5-1.5B-Instruct | Q4_K_M | ≈ 1.0 GB |
-| 16 GB | Llama-3.2-3B-Instruct | Q4_K_M | ≈ 2.0 GB |
-| 32 GB+ | Qwen2.5-7B-Instruct | Q4_K_M | ≈ 4.7 GB |
+| | Yêu cầu |
+|---|---|
+| RAM | **8 GB** với Gemma 4 E2B · **4 GB** với Qwen3.5 0.8B (`LAB_MODEL=qwen35-0.8b`) |
+| Đĩa trống | ~10 GB (Gemma) hoặc ~3 GB (Qwen3.5 0.8B), gồm runtime + deps |
+| Python | ≥ 3.10 |
+| GPU | **không cần** |
+| Compiler | **không cần** (chỉ bonus B1 mới cần cmake) |
+| Docker | **không cần bao giờ** |
 
-Rule of thumb: **GGUF Q4_K_M file size ≤ ½ × free RAM**. The other half holds OS, browser, KV cache, and headroom.
+**RAM < 8 GB?** Chạy local với model nhỏ: `LAB_MODEL=qwen35-0.8b make setup`.
+**RAM < 4 GB?** Dùng [`cloud/`](cloud/README.md) (Colab hoặc Kaggle) và khai báo ở
+REFLECTION §1. Điểm không bị ảnh hưởng — rubric chấm lập luận, không chấm phần cứng.
 
-> **2026 model options:** the tiers above are safe defaults. Newer open-weight small models drop in at the same RAM tiers — **Qwen3** (1.7B / 4B / 8B), **Gemma 3** (1B / 4B, with QAT-INT4 builds), **Llama-3.3**, and **gpt-oss-20B** (MXFP4, MoE 3.6B active, ~16 GB) for 32 GB+ laptops. Same GGUF + llama.cpp path — just swap the Hugging Face repo id in `00-setup/download-model.py`.
+## 2. Model — chọn một trong hai
 
-`00-setup/download-model.py` reads `hardware.json` (from `detect-hardware.py`) and pulls the right tier automatically.
+Cả hai Apache-2.0, **không gated**: không token, không accept license.
 
-## 2. llama.cpp backend by hardware
+| | **Gemma 4 E2B** *(mặc định)* | **Qwen3.5 0.8B** |
+|---|---|---|
+| Repo | [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) | [unsloth/Qwen3.5-0.8B-GGUF](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF) |
+| `LAB_MODEL=` | `gemma4-e2b` | `qwen35-0.8b` |
+| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` — 2.97 GB | `Qwen3.5-0.8B-Q4_K_M.gguf` — 0.50 GB |
+| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` — 2.24 GB | `Qwen3.5-0.8B-UD-Q2_K_XL.gguf` — 0.39 GB |
+| Tổng tải | ~5.2 GB | **~0.9 GB** |
+| RAM tối thiểu | 8 GB | **4 GB** |
+| Context | 128K | 256K |
+| Bonus C1 (MTP) | có `mtp-gemma-4-E2B-it.gguf` | không có |
+| Bonus B5 (MLX) | `unsloth/gemma-4-E2B-it-UD-MLX-4bit` | `mlx-community/Qwen3.5-0.8B-4bit` |
 
-| Accelerator | Build flag | OS support | Notes |
-|---|---|---|---|
-| **CPU only** | (default) | All | Always works. Bonus track tunes AVX2/AVX-512/NEON. |
-| **NVIDIA CUDA** | `-DGGML_CUDA=on` | Linux, Windows, WSL2 | Needs CUDA Toolkit 12+. `-ngl 99` offloads all layers to GPU. |
-| **Apple Metal** | `-DGGML_METAL=on` | macOS Apple Silicon only | Default on M1–M4. Free, no setup. |
-| **AMD ROCm/HIP** | `-DGGML_HIPBLAS=on` | Linux | RDNA2+ GPUs. Pinned to specific ROCm versions. |
-| **Vulkan** | `-DGGML_VULKAN=on` | Linux, Windows | Works on Intel Arc, AMD discrete, NVIDIA, Apple (via MoltenVK). Slower than vendor-native but universal. |
-| **OpenCL / SYCL** | `-DGGML_SYCL=on` | Linux, Windows | Intel oneAPI path; mostly useful for Intel Arc. |
+**Gemma 4 E2B**: "E2B" = *effective* 2B tham số. Model dùng per-layer embeddings nên tổng
+tham số lớn hơn 2B, còn chi phí tính toán mỗi token tương đương một model 2B. Đó là lý do
+file 4-bit ~3 GB chứ không phải ~1.2 GB.
 
-`00-setup/detect-hardware.py` picks the backend with the best speed-vs-setup-cost ratio for what it finds.
+**Qwen3.5 0.8B**: nhỏ hơn ~6 lần, load nhanh hơn gấp đôi, decode nhanh hơn ~1.5 lần trên
+cùng máy. Đánh đổi là chất lượng câu trả lời — 0.8B tham số thì đúng như 0.8B tham số. Với
+một lab về **latency và throughput** thì đây là đánh đổi hoàn toàn hợp lý, và bản thân việc
+so hai model cũng là một quan sát đáng viết.
 
-## 3. Decision tree
+**"UD"** = Unsloth Dynamic: các layer nhạy cảm được giữ ở precision cao hơn, nên bản 2-bit
+dùng được thật thay vì hỏng hẳn như `Q2_K` phẳng. Riêng Qwen3.5 0.8B dùng `Q4_K_M` chuẩn
+làm primary (repo không có `Q2_K` phẳng để so, nên compare là `UD-Q2_K_XL`).
 
+Cả lab chỉ cần 2 file. Bonus `make sweep-quant` mới tải thêm.
+
+## 3. Runtime — prebuilt, không compile
+
+`labs/00-setup/fetch-runtime.py` đọc `hardware.json`, hỏi GitHub release API của
+llama.cpp (pin ở build **`b10488`**), rồi chọn asset đúng cho máy bạn:
+
+| Máy | Asset được chọn | Tải về |
+|---|---|--:|
+| macOS Apple Silicon | `bin-macos-arm64` (Metal có sẵn) | 11 MB |
+| macOS Intel | `bin-macos-x64` | ~12 MB |
+| Linux x64, CPU | `bin-ubuntu-x64` | 16 MB |
+| Linux x64 + GPU bất kỳ | `bin-ubuntu-vulkan-x64` | 32 MB |
+| Linux ARM64 | `bin-ubuntu-arm64` | ~15 MB |
+| Windows x64, CPU | `bin-win-cpu-x64` | 18 MB |
+| Windows + NVIDIA | `bin-win-cuda-<ver>-x64` + CUDA runtime DLLs | ~140–240 MB |
+| Windows + AMD | `bin-win-rocm-7.14-x64` | 188 MB |
+| Windows ARM64 | `bin-win-cpu-arm64` | ~17 MB |
+
+Với NVIDIA trên Windows, script đọc CUDA version mà driver hỗ trợ (`nvidia-smi`) và
+chọn build cao nhất mà driver chạy được, kèm `cudart` DLLs.
+
+> **Linux + NVIDIA:** llama.cpp **không** publish prebuilt CUDA cho Linux. Script sẽ
+> chọn **Vulkan** — chạy tốt trên NVIDIA, chỉ chậm hơn CUDA một chút. Muốn CUDA thật
+> thì compile: `LLAMA_CMAKE_FLAGS=-DGGML_CUDA=ON make build-llama`. Đây chính là
+> bonus **C6** (Vulkan vs CUDA head-to-head) — bạn có sẵn cả hai để so.
+
+Ghi đè lựa chọn tự động:
+
+```bash
+python labs/00-setup/fetch-runtime.py --list                       # xem hết asset
+python labs/00-setup/fetch-runtime.py --asset <tên> --force        # chọn tay
 ```
-Do you have an NVIDIA GPU with ≥ 4 GB VRAM?
-├─ Yes (Linux or Windows) → CUDA build (full GPU offload)
-└─ No
-   ├─ Apple Silicon Mac (M1+)? → Metal build (zero setup, just works)
-   ├─ AMD discrete on Linux? → Vulkan build (simpler) or ROCm build (faster, fragile)
-   ├─ Intel Arc / modern iGPU? → Vulkan build
-   └─ Older Mac / weak iGPU / unsure → CPU build, focus on bonus track AVX/NEON tuning
-```
 
-The bonus track is where weaker hardware shines — every CPU optimization (proper thread count, AVX2 vs AVX-512 build, batch sizing) shows up as a measurable speedup.
+## 4. Backend nào cho phần cứng nào
 
-## 4. Disk space
+| Accelerator | Prebuilt có? | cmake flag (bonus B1) |
+|---|---|---|
+| CPU (mọi OS) | ✅ luôn có | *(default)* + `-DGGML_NATIVE=ON` |
+| Apple Metal | ✅ trong build macOS-arm64 | `-DGGML_METAL=ON` |
+| NVIDIA CUDA | ✅ Windows · ❌ Linux (dùng Vulkan) | `-DGGML_CUDA=ON` |
+| AMD ROCm | ✅ Windows · ❌ Linux (dùng Vulkan) | `-DGGML_HIPBLAS=ON` |
+| Vulkan (Intel Arc, AMD, NVIDIA) | ✅ Linux + Windows | `-DGGML_VULKAN=ON` |
 
-- Setup downloads ~500 MB Python deps + ~1–5 GB model weights (depends on RAM tier).
-- Bonus track adds ~1 GB for llama.cpp source build artifacts + extra quantizations to compare.
-- Plan for **8 GB free** before starting.
+`make probe` đã chọn giúp bạn — cột cmake chỉ dùng khi làm bonus B1.
 
-## 5. Network
+## 5. Nếu laptop bạn là máy yếu nhất lớp
 
-- Hugging Face downloads can stall behind university firewalls. The setup script tries Hugging Face, then a mirror list. If both fail, see `00-setup/MANUAL-DOWNLOAD.md` for browser instructions.
-- No Docker pulls needed — that was the whole point of dropping the vLLM track.
+Đó là **lợi thế** ở bonus track, không phải bất lợi:
 
-## 6. What about MLX, MLC, ExecuTorch, etc.?
+- `make tune` (core) — thread count là knob lớn nhất trên CPU. Curve rõ nhất trên
+  máy nhiều core nhưng bandwidth hẹp.
+- `make build-llama && make compare-builds` (B1) — prebuilt binary được compile cho
+  CPU baseline chung. Build riêng cho CPU của bạn với `-DGGML_NATIVE=ON` thường là
+  speedup lớn nhất cả lab, và **càng rõ trên máy yếu**.
+- `make sweep-quant` (B2) — RAM chật thì đây là quyết định thật, không phải bài tập.
 
-MLX is offered as `BONUS-mlx-macos/` for Apple Silicon students who want a side-by-side runtime comparison. The other Apple/mobile-first runtimes (MLC LLM, ExecuTorch, Core ML) are mentioned in the deck but not built into the lab — pick one as a stretch project if you finish early.
+## 6. Network
+
+- Hugging Face có thể bị chặn ở mạng trường. Nếu `make setup` fail ở bước model,
+  xem [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md).
+- GitHub release API giới hạn 60 request/giờ/IP. Cả lớp cùng NAT có thể chạm giới
+  hạn — script tự fallback sang bảng tên asset có sẵn, nên vẫn tải được.
+- Không có Docker pull nào trong toàn bộ lab.
+
+## 7. MLX, MLC, ExecuTorch?
+
+**MLX** là bonus B5 cho Apple Silicon — Unsloth publish Gemma 4 E2B ở cả GGUF và
+MLX, nên đó là so sánh *runtime* thật (cùng model, cùng 4-bit), không phải so hai
+model khác nhau. MLC LLM / ExecuTorch / Core ML được deck nhắc nhưng không build vào
+lab; chọn làm stretch project nếu bạn xong sớm.
