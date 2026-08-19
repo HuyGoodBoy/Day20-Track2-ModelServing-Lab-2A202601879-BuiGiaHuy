@@ -1,52 +1,54 @@
 # GUIDE — Làm lab Day 20 từ đầu đến cuối
 
-Hướng dẫn từng bước. Làm theo đúng thứ tự. Mỗi bước có **lệnh chạy**, **bạn sẽ thấy gì**,
-và **file nào được sinh ra** (file đó chính là điểm).
+Làm lần lượt theo hướng dẫn này. Mỗi bước cho biết **lệnh cần chạy**, **kết quả bạn sẽ
+thấy** và **file được sinh ra**. Các file đó là bằng chứng để chấm điểm.
 
 **Tổng thời gian:** ~2.5 giờ cho base track · +1–2 giờ nếu làm bonus.
 
-> ### 🪟 Windows đọc dòng này trước
-> Windows không có `make`. Dùng **`.\lab.ps1 <target>`** ở mọi chỗ hướng dẫn này viết
-> `make <target>` — tên target giống hệt nhau.
+> ### 🪟 Windows: đọc phần này trước
+> Windows không có `make`. Khi hướng dẫn ghi `make <target>`, hãy dùng
+> **`.\lab.ps1 <target>`** với cùng tên target.
 >
 > ```powershell
-> powershell -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1   # 1 lần duy nhất
+> powershell -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1   # chỉ chạy 1 lần
 > .\lab.ps1                 # xem toàn bộ target
-> .\lab.ps1 bench           # = make bench
+> .\lab.ps1 bench           # tương đương make bench
 > ```
 
 ```
 PHASE 0  Setup                 ~20 phút
 PHASE 1  Base track (100 điểm)  ~2 giờ      ← bắt buộc
-PHASE 2  Bonus track (20 điểm)  ~1-2 giờ    ← optional, làm SAU khi base xong
+PHASE 2  Bonus track (20 điểm)  ~1-2 giờ    ← optional, chỉ làm SAU khi xong base
 PHASE 3  Submit                 ~5 phút
 ```
 
-> **Quy tắc vàng:** mọi file `benchmarks/*.md` mà lab sinh ra đều có một section
-> **"required — replace this line"**. Bạn **phải** thay nó bằng nhận xét của mình.
-> `make verify` sẽ fail nếu còn sót. Số liệu là phần dễ; nhận xét là phần được chấm.
+> **Quy tắc quan trọng:** mỗi file `benchmarks/*.md` do lab sinh ra đều có section
+> **"required -- replace this line"**. Bạn **phải** thay section đó bằng nhận xét của
+> mình. Nếu còn sót, `make verify` sẽ fail. Số liệu chỉ là đầu vào; phần nhận xét mới là
+> nội dung được chấm.
 
 ---
 
 # PHASE 0 — Setup
 
-## Bước 0.1 — Kiểm tra máy có chạy được không
+## Bước 0.1 — Kiểm tra máy
 
 ```bash
 make probe
 ```
 
-Bạn sẽ thấy CPU, số core, RAM, accelerator, và model sẽ dùng.
+Bạn sẽ thấy thông tin về CPU, số core, RAM, accelerator và model dùng trong lab.
 
-**Quyết định ngay tại đây:**
+**Chọn cách chạy ngay ở bước này:**
 
-| RAM | Làm gì |
+| RAM | Cách làm |
 |---|---|
 | **≥ 8 GB** | Tiếp tục bước 0.2 trên laptop |
-| **< 8 GB** | Dừng lại. Mở [`cloud/README.md`](cloud/README.md) → làm trên Colab/Kaggle. **Không mất điểm.** |
+| **< 8 GB** | Dừng tại đây. Mở [`cloud/README.md`](cloud/README.md) và làm trên Colab/Kaggle. **Không mất điểm.** |
 
 → Sinh ra: **`hardware.json`** *(rubric 1)*
-→ **Screenshot ngay:** `submission/screenshots/01-hardware-probe.png`
+
+→ **Chụp screenshot ngay:** `submission/screenshots/01-hardware-probe.png`
 
 ## Bước 0.2 — Cài đặt
 
@@ -54,10 +56,19 @@ Bạn sẽ thấy CPU, số core, RAM, accelerator, và model sẽ dùng.
 make setup
 ```
 
-Mất 5–15 phút. Nó làm 3 việc: tạo `.venv` + cài 4 package Python, tải **llama.cpp
-prebuilt binary** (10–35 MB, **không compile**), tải **Gemma 4 E2B** (2 quantization, ~5.2 GB).
+Bước này mất khoảng 5–15 phút và thực hiện ba việc:
 
-Windows dùng lệnh này thay thế:
+- Tạo `.venv` và cài 4 package Python.
+- Tải **llama.cpp prebuilt binary** (10–35 MB, **không compile**).
+- Tải **Gemma 4 E2B** với 2 quantization (~5.2 GB).
+
+Trên Windows, bạn có thể chạy target tương ứng:
+
+```powershell
+.\lab.ps1 setup
+```
+
+Hoặc chạy bootstrap trực tiếp:
 
 ```powershell
 pwsh -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1
@@ -65,7 +76,7 @@ pwsh -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1
 
 → Sinh ra: **`models/active.json`** *(rubric 2)*, `runtime/`, `models/*.gguf`
 
-**Nếu tải model fail** (mạng trường chặn Hugging Face): xem
+Nếu tải model fail do mạng trường chặn Hugging Face, xem
 [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md).
 
 ---
@@ -78,10 +89,10 @@ pwsh -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1
 make bench
 ```
 
-Script tự bật `llama-server`, chạy 10 prompt qua HTTP streaming, tắt server, rồi lặp lại
-với quantization thứ hai. Mất vài phút.
+Script tự bật `llama-server`, gửi 10 prompt qua HTTP streaming, tắt server, rồi lặp lại
+với quantization thứ hai. Bước này mất vài phút.
 
-Bạn sẽ thấy một bảng như:
+Bạn sẽ thấy bảng tương tự:
 
 ```
 | Quantization | Size (GB) | TTFT P50/P95 | TPOT P50/P95 | Decode (tok/s) |
@@ -90,31 +101,33 @@ Bạn sẽ thấy một bảng như:
 ```
 
 → Sinh ra: **`benchmarks/01-quickstart-results.md`** *(rubric 3, 4, 5)*
-→ **Screenshot:** `02-bench.png`
 
-**Việc bạn phải làm:** mở file đó, thay section *"Your observation"* bằng câu trả lời:
-2-bit nhanh hơn bao nhiêu, nhỏ hơn bao nhiêu, **và có đáng không?**
+→ **Chụp screenshot:** `02-bench.png`
 
-Muốn trả lời phần "có đáng không" cho tử tế thì phải thử chất lượng:
+**Bạn cần làm:** mở file trên và thay section *"Your observation"*. Nêu rõ 2-bit nhanh
+hơn bao nhiêu, nhỏ hơn bao nhiêu và **có đáng dùng không**.
+
+Để đánh giá phần "có đáng dùng không", hãy thử chất lượng của cả hai quantization:
 
 ```bash
 make serve                                      # terminal 1: bản 4-bit
 python labs/02-serve/serve.py --compare         # hoặc bản 2-bit
 ```
 
-Hỏi cùng một câu ở cả hai, tự đọc câu trả lời rồi kết luận.
+Đặt cùng một câu hỏi cho cả hai, đọc kết quả rồi đưa ra kết luận.
 
-> ⚠️ Cả hai server đều mặc định port **8080** — **tắt** server thứ nhất (Ctrl-C) trước khi
-> bật bản `--compare`, hoặc cho nó port khác: `python labs/02-serve/serve.py --compare --port 8090`.
+> ⚠️ Cả hai server mặc định dùng port **8080**. Bạn **phải tắt** server thứ nhất bằng
+> Ctrl-C trước khi bật bản `--compare`. Cách khác là dùng port riêng:
+> `python labs/02-serve/serve.py --compare --port 8090`.
 
-## Bước 1.2 — Tune: tìm thread count tốt nhất cho máy bạn
+## Bước 1.2 — Tune thread count cho máy của bạn
 
 ```bash
 make tune
 ```
 
-Đây là **nguồn cho section 5 của REFLECTION** — before/after thật, không cần compiler,
-không cần GPU. Mất vài phút.
+Kết quả này là nguồn cho **REFLECTION §5**: một before/after thật, không cần compiler
+hay GPU. Bước này mất vài phút.
 
 ```
 | threads (-t) | tg128 (tok/s) | vs best |
@@ -125,16 +138,18 @@ không cần GPU. Mất vài phút.
 ```
 
 → Sinh ra: **`benchmarks/01-tuning-tg128.md`** *(nguồn cho rubric 11)*
-→ Screenshot (optional): `06-tune.png`
 
-**Việc bạn phải làm:** giải thích **knee ở đâu và vì sao**. Nếu curve của bạn khác kỳ
-vọng (peak không ở physical core count) → nói rõ, đó là phần ăn điểm.
+→ Screenshot optional: `06-tune.png`
 
-## Bước 1.3 — Dựng server + chứng minh nó chạy
+**Bạn cần làm:** xác định **knee** và giải thích nguyên nhân. Nếu curve không peak ở
+physical core count như kỳ vọng, hãy nói rõ. Đây là dữ liệu đáng phân tích, không phải
+lỗi cần che đi.
 
-Cần **2 terminal**.
+## Bước 1.3 — Dựng server và chứng minh server hoạt động
 
-**Terminal 1** (để chạy suốt, đừng tắt):
+Bạn cần **2 terminal**.
+
+**Terminal 1** — giữ server chạy:
 
 ```bash
 make serve
@@ -146,24 +161,27 @@ make serve
 make smoke
 ```
 
-`make smoke` chứng minh 2 thứ trong 1 lần chạy: một completion thật, **và** `/metrics` có
-`llamacpp:tokens_predicted_total` khác 0.
+`make smoke` chứng minh hai việc trong một lần chạy: server trả về một completion thật,
+và `/metrics` có `llamacpp:tokens_predicted_total` khác 0.
 
 → *(rubric 6, 7)*
-→ **Screenshot:** `03-serve-and-smoke.png` — phải thấy **cả** server đang listen **và**
-output của `make smoke`. Chia đôi terminal, hoặc chụp 2 file `03a-` / `03b-`.
+
+→ **Chụp screenshot:** `03-serve-and-smoke.png`. Ảnh phải có **cả** server đang listen
+và output của `make smoke`. Bạn có thể chia đôi terminal hoặc chụp hai file `03a-` /
+`03b-`.
 
 ## Bước 1.4 — Load test
 
-Server vẫn chạy ở terminal 1. Ở terminal 2:
+Giữ server chạy ở terminal 1. Tại terminal 2:
 
 ```bash
 make load-10       # 10 users, 60s
 ```
 
-→ **Screenshot:** `04-locust-10.png` (phải thấy dòng có `# reqs · Median · 95%ile · 99%ile`)
+→ **Chụp screenshot:** `04-locust-10.png`. Ảnh phải thấy dòng có
+`# reqs · Median · 95%ile · 99%ile`.
 
-Rồi tới lượt 50 users — **cần 3 terminal cho bước này**:
+Tiếp theo là 50 users. Bước này cần **3 terminal**:
 
 ```bash
 # terminal 2:
@@ -173,117 +191,124 @@ make load-50
 make metrics
 ```
 
-> ⚠️ **Lỗi phổ biến nhất của lab này:** chạy `make metrics` khi server đang rảnh.
-> Lúc đó `n_busy_slots_per_decode` sẽ ≈ 1 và bạn không có bằng chứng gì về continuous
-> batching. `make metrics` **phải** chồng thời gian với `make load-50`.
+> ⚠️ **Lỗi phổ biến nhất của lab:** chạy `make metrics` khi server đang rảnh. Khi đó,
+> `n_busy_slots_per_decode` sẽ ≈ 1 và không chứng minh được continuous batching.
+> `make metrics` **phải chạy chồng thời gian với `make load-50`**.
 
-→ **Screenshot:** `05-locust-50.png`
+→ **Chụp screenshot:** `05-locust-50.png`
+
 → Sinh ra: **`benchmarks/02-server-batching-u50.md`** + `.csv` *(rubric 9)*
 
-Bạn sẽ thấy dòng như: `Peak n_busy_slots_per_decode = 3.79 of 4 slots` — đó chính là
-continuous batching đang hoạt động.
+Bạn sẽ thấy một dòng tương tự:
+`Peak n_busy_slots_per_decode = 3.79 of 4 slots`. Đây là bằng chứng continuous batching
+đang hoạt động.
 
-## Bước 1.5 — Tổng hợp: server bão hoà ở đâu?
+## Bước 1.5 — Xác định điểm saturation của server
 
 ```bash
 make load-report
 ```
 
-Đọc 2 lần load ở trên và tính **effective concurrency** theo Little's Law
-(`RPS × average latency`), so với số `--parallel` slot.
+Script đọc hai load test phía trên. Nó dùng Little's Law
+(`RPS × average latency`) để tính **effective concurrency**, rồi so với số slot của
+`--parallel`.
 
 → Sinh ra: **`benchmarks/02-server-results.md`** *(rubric 10)*
 
-**Việc bạn phải làm:** trả lời *server bão hoà ở đâu, bằng chứng nào?* Nếu throughput
-tăng ít mà P95 tăng nhiều → phần latency thêm đó là **queue time**, không phải compute.
-Đó chính là lập luận goodput@SLO của deck §8.
+**Bạn cần làm:** trả lời server saturation ở đâu và bằng chứng là gì. Nếu throughput
+tăng ít nhưng P95 tăng mạnh, phần latency tăng thêm là **queue time**, không phải
+compute. Đây là lập luận goodput@SLO trong deck §8.
 
-## Bước 1.6 — RAG pipeline
+## Bước 1.6 — Chạy RAG pipeline
 
-Server vẫn chạy. Terminal 2:
+Giữ server chạy. Tại terminal 2:
 
 ```bash
 make pipeline
 ```
 
-Bạn sẽ thấy 3 query, context được retrieve, và latency chia theo stage:
+Bạn sẽ thấy 3 query, context được retrieve và latency theo từng stage:
 
 ```
 timings : {'embed': 0.0, 'retrieve': 0.3, 'llm': 1875.2, 'total': 1875.5}
 Dominant stage: llm (100% of total)
 ```
 
-→ *(rubric 12, 13)* · Screenshot (optional): `08-pipeline.png`
+→ *(rubric 12, 13)* · Screenshot optional: `08-pipeline.png`
 
-**Việc bạn phải làm:** trong REFLECTION §4, khai báo **cái nào real, cái nào stub**.
-Stub **không mất điểm** — nói dối mới mất. Thay 2 chỗ `STUB` trong
-`labs/03-integrate/pipeline.py` bằng code N19 của bạn nếu có.
+**Bạn cần làm:** trong REFLECTION §4, khai báo rõ stage nào **real**, stage nào **stub**.
+Dùng stub không mất điểm; khai báo sai mới mất điểm. Nếu có code N19, thay hai chỗ
+`STUB` trong `labs/03-integrate/pipeline.py`.
 
 ## Bước 1.7 — Viết REFLECTION.md
 
-Mở [`submission/REFLECTION.md`](submission/REFLECTION.md) và điền hết. Đây là file
-grader đọc kỹ nhất.
+Mở [`submission/REFLECTION.md`](submission/REFLECTION.md) và điền đủ mọi section. Đây
+là file grader đọc kỹ nhất.
 
-Nặng nhất là **§5 "The single change that mattered most"** (10 điểm): lấy kết quả từ
-`make tune` ở bước 1.2, và giải thích **cơ chế** — memory bandwidth? cache? scheduling?
-Đừng "vibes-based".
+Phần quan trọng nhất là **§5 "The single change that mattered most"** (10 điểm). Dùng
+kết quả `make tune` ở bước 1.2 và giải thích **cơ chế**: memory bandwidth, cache hay
+scheduling. Không chỉ nêu cảm nhận hoặc chép lại con số.
 
-## Bước 1.8 — Kiểm tra
+## Bước 1.8 — Kiểm tra base track
 
 ```bash
 make verify
 ```
 
-Phải **exit 0**. Nếu chưa, nó in ra đúng danh sách còn thiếu và lệnh cần chạy.
+Lệnh này phải **exit 0**. Nếu fail, output sẽ liệt kê file còn thiếu và lệnh cần chạy.
 
-**Base track xong ở đây. Bạn đã có 100 điểm khả dụng.**
+**Base track hoàn tất tại đây. Bạn đã có đủ bằng chứng cho 100 điểm base.**
 
 ---
 
 # PHASE 2 — Bonus track (20 điểm, optional)
 
-> **Chỉ bắt đầu khi PHASE 1 đã xong và `make verify` đã exit 0.** Bonus không bù được
-> base track thiếu.
+> **Chỉ bắt đầu khi PHASE 1 đã hoàn tất và `make verify` đã exit 0.** Bonus không bù
+> được phần base còn thiếu.
 
-Chi tiết: [`bonus/README.md`](bonus/README.md) · [`bonus/CHALLENGES.md`](bonus/CHALLENGES.md)
+Chi tiết: [`bonus/README.md`](bonus/README.md) ·
+[`bonus/CHALLENGES.md`](bonus/CHALLENGES.md)
 
-Chọn **1–2 cái**, đừng làm hết. 5 tiêu chí × 4 điểm:
+Chọn **1–2 mục**, không cần làm hết. Có 5 tiêu chí, mỗi tiêu chí 4 điểm:
 
 | | Lệnh | Ghi chú |
 |---|---|---|
-| **B1** | `make build-llama && make compare-builds` | Compile cho CPU của bạn rồi so với prebuilt binary. **Máy yếu thắng đậm nhất ở đây.** Cần `cmake`. |
-| **B2** | `make sweep-quant` / `sweep-ctx` / `sweep-batch` / `sweep-gpu` | Chọn 1 cái khớp bottleneck của bạn |
+| **B1** | `make build-llama && make compare-builds` | Compile cho CPU của bạn rồi so với prebuilt binary. **Máy yếu thường có mức cải thiện rõ nhất ở đây.** Cần `cmake`. |
+| **B2** | `make sweep-quant` / `sweep-ctx` / `sweep-batch` / `sweep-gpu` | Chọn 1 sweep phù hợp với bottleneck của bạn |
 | **B3** | — | Ghi before/after của B1 hoặc B2 vào REFLECTION §6 |
 | **B4** | — | Chọn 1 challenge C1–C7 trong `bonus/CHALLENGES.md` |
-| **B5** | `make mlx-compare` (Mac) **hoặc** `make semantic-cache` (C8) **hoặc** `make serve-embed && make embed-demo` (C9) **hoặc** C6 | 4 lựa chọn — **mọi nền tảng đều đạt được** |
+| **B5** | `make mlx-compare` (Mac) **hoặc** `make semantic-cache` (C8) **hoặc** `make serve-embed && make embed-demo` (C9) **hoặc** C6 | 4 lựa chọn; nền tảng nào cũng có lựa chọn phù hợp |
 
-Nên chọn cái nào theo máy:
+Gợi ý theo máy và mục tiêu:
 
-- **CPU-only** → B1 (`compare-builds`). Đây là speedup lớn nhất cả lab.
-- **RAM chật** → `make sweep-quant`
-- **Có GPU** → `make sweep-gpu`
-- **Quan tâm RAG long-context** → `make sweep-ctx`
-- **Không muốn tải thêm gì** → C8 hoặc C9 (chạy được cả với `--offline`)
+- **CPU-only** → B1 (`compare-builds`). Đây thường là speedup lớn nhất trong lab.
+- **RAM hạn chế** → `make sweep-quant`.
+- **Có GPU** → `make sweep-gpu`.
+- **Quan tâm RAG long-context** → `make sweep-ctx`.
+- **Không muốn tải thêm** → C8 hoặc C9, có thể chạy với `--offline`.
 
-Mỗi bonus script cũng sinh `benchmarks/bonus-*.md` với section *"required — replace this
-line"* — vẫn phải điền.
+Mỗi bonus script cũng sinh file `benchmarks/bonus-*.md` có section
+*"required -- replace this line"*. Bạn vẫn phải điền section này.
 
 ---
 
 # PHASE 3 — Submit
 
-1. `make verify` → **exit 0** (chạy lần cuối)
-2. Fork/copy repo lên GitHub account của bạn, set **public**
-3. Commit + push:
+1. Chạy `make verify` lần cuối. Kết quả phải **exit 0**.
+2. Fork/copy repo lên GitHub account của bạn và set **public**.
+3. Commit và push:
+
    ```bash
    git add -A && git commit -m "Day 20 lab submission" && git push
    ```
-4. Paste public URL vào ô submission Day 20 trên VinUni LMS
 
-**Repo phải public đến khi điểm được công bố.** Private → grader không xem được → **0 điểm**.
+4. Paste public URL vào ô submission Day 20 trên VinUni LMS.
 
-Đừng commit `models/*.gguf` hay `runtime/` — đã có trong `.gitignore`, và `make verify`
-không đòi chúng.
+**Repo phải public cho đến khi điểm được công bố.** Nếu repo private, grader không thể
+đọc bài và bạn nhận **0 điểm**.
+
+Không commit `models/*.gguf` hoặc `runtime/`. Hai path này đã có trong `.gitignore`, và
+`make verify` không yêu cầu chúng.
 
 ---
 
@@ -291,25 +316,25 @@ không đòi chúng.
 
 | Triệu chứng | Cách xử lý |
 |---|---|
-| `unknown model architecture: 'gemma4'` | llama.cpp quá cũ. `make runtime` để tải lại bản pin. |
-| `make serve` báo không tìm thấy venv | Chưa chạy `make setup` |
-| `make bench` fail, câu trả lời rỗng | Gemma 4 là reasoning model; lab đã set `--reasoning off`. Nếu bạn tự bật `LAB_REASONING=on` thì `content` sẽ rỗng cho tới khi model "nghĩ" xong. |
-| `make metrics` báo scrape failed | Server chưa chạy, hoặc bạn không chạy `make serve` |
-| `busy_slots ≈ 1` dù đã chạy metrics | Bạn chạy `make metrics` khi không có load. Phải chồng với `make load-50`. |
-| locust chỉ hoàn thành vài request | Bình thường trên máy yếu. Muốn nhiều mẫu hơn: `-t 3m`, hoặc giảm `LAB_LOAD_SHORT_TOKENS`. |
-| Hugging Face bị chặn | [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md) |
-| Máy < 8 GB RAM | [`cloud/README.md`](cloud/README.md) |
-| `make verify` fail mà không hiểu vì sao | Nó in đúng file thiếu + lệnh cần chạy. Đọc kỹ dòng đó. |
+| `unknown model architecture: 'gemma4'` | llama.cpp quá cũ. Chạy `make runtime` để tải lại bản đã pin. |
+| `make serve` báo không tìm thấy venv | Bạn chưa chạy `make setup`. |
+| `make bench` fail, câu trả lời rỗng | Gemma 4 là reasoning model; lab đã set `--reasoning off`. Nếu bạn tự bật `LAB_REASONING=on`, `content` sẽ rỗng cho đến khi model "nghĩ" xong. |
+| `make metrics` báo scrape failed | Server chưa chạy. Chạy `make serve` trước. |
+| `busy_slots ≈ 1` dù đã chạy metrics | Bạn chạy `make metrics` khi không có load. Phải chạy chồng với `make load-50`. |
+| locust chỉ hoàn thành vài request | Bình thường trên máy yếu. Muốn thêm mẫu, dùng `-t 3m` hoặc giảm `LAB_LOAD_SHORT_TOKENS`. |
+| Hugging Face bị chặn | Xem [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md). |
+| Máy < 8 GB RAM | Dùng [`cloud/README.md`](cloud/README.md). |
+| `make verify` fail mà chưa rõ lý do | Output ghi đúng file còn thiếu và lệnh cần chạy. Đọc từng dòng lỗi. |
 
 ## Các knob có thể đổi
 
-Không cần file `.env` — set inline là được:
+Không cần tạo file `.env`. Set inline:
 
 ```bash
 LAB_N_THREADS=4 make bench       # dùng thread count tốt nhất từ make tune
 LAB_N_CTX=4096 make serve        # context lớn hơn (tốn RAM hơn)
 LAB_PARALLEL=8 make serve        # nhiều slot hơn
-LAB_REASONING=on make bench      # bật thinking để xem nó tốn bao nhiêu
+LAB_REASONING=on make bench      # bật thinking để đo chi phí
 ```
 
 Danh sách đầy đủ: [`.env.example`](.env.example)
