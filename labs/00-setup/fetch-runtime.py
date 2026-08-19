@@ -228,8 +228,16 @@ def main() -> int:
 
     into = labkit.runtime_dir() / BUILD
     existing = labkit.runtime_bin("llama-server", required=False)
+    # Only a binary inside the repo counts as "already fetched". runtime_bin() also
+    # falls back to PATH, and a system-wide llama-server would both skip the pinned
+    # build and blow up relative_to() with a ValueError.
+    if existing:
+        try:
+            existing = existing.resolve().relative_to(labkit.repo_root())
+        except ValueError:
+            existing = None
     if existing and not args.force:
-        print(f"==> llama-server already present: {existing.relative_to(labkit.repo_root())}")
+        print(f"==> llama-server already present: {existing}")
         print("    (re-fetch with --force)")
         return 0
 

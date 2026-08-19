@@ -19,7 +19,8 @@ help: ## Show this help
 	      /^## ---/ { printf "\n%s\n", substr($$0, 8); next } \
 	      /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 	@printf "\nWindows:  pwsh -ExecutionPolicy Bypass -File labs/00-setup/bootstrap.ps1\n"
-	@printf "Under 8 GB RAM?  Use cloud/Day20-lab.ipynb on Colab or Kaggle.\n\n"
+	@printf "4-8 GB RAM?  LAB_MODEL=qwen35-0.8b make setup  (runs locally).\n"
+	@printf "Under 4 GB RAM?  Use cloud/Day20-lab.ipynb on Colab or Kaggle.\n\n"
 
 # Fail early and clearly if setup has not run.
 venv-check:
@@ -159,7 +160,8 @@ clean: ## Remove generated reports (keeps hardware.json, models, REFLECTION, scr
 	@rm -f benchmarks/01-*.md benchmarks/01-*.json \
 	       benchmarks/02-*.md benchmarks/02-*.json benchmarks/02-*.csv \
 	       benchmarks/03-*.md benchmarks/03-*.json \
-	       benchmarks/locust-*.csv benchmarks/bonus-*.md benchmarks/bonus-*.json
+	       benchmarks/locust-*.csv benchmarks/bonus-*.md benchmarks/bonus-*.json \
+	       benchmarks/.llama-server.log
 	@find . -name __pycache__ -type d -prune -exec rm -rf {} + 2>/dev/null || true
 	@echo "Cleaned generated reports. Kept: hardware.json, models/, runtime/, submission/."
 

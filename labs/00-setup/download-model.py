@@ -111,7 +111,8 @@ def main() -> int:
                   file=sys.stderr)
             print(f"  {labkit.model_file_url(wanted[0], mirror=True, key=key)}", file=sys.stderr)
             print("\nThen write the manifest:", file=sys.stderr)
-            print("  python labs/00-setup/download-model.py --skip-download", file=sys.stderr)
+            print(f"  {sys.executable} labs/00-setup/download-model.py --skip-download",
+                  file=sys.stderr)
             print("\nFull instructions: labs/00-setup/MANUAL-DOWNLOAD.md", file=sys.stderr)
             return 1
 

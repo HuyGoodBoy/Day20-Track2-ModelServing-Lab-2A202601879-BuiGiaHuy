@@ -340,12 +340,20 @@ def server_cmd(
     return cmd + (extra or [])
 
 
-def wait_healthy(port: int | None = None, timeout: float = 180.0) -> bool:
+def wait_healthy(port: int | None = None, timeout: float = 180.0,
+                 proc: subprocess.Popen | None = None) -> bool:
+    """Poll /health until the server answers.
+
+    Pass `proc` so a server that dies at startup ends the wait immediately instead
+    of burning the full timeout — the student needs the error, not a 180s pause.
+    """
     import httpx
 
     url = f"http://127.0.0.1:{port or server_port()}/health"
     deadline = time.time() + timeout
     while time.time() < deadline:
+        if proc is not None and proc.poll() is not None:
+            return False
         try:
             if httpx.get(url, timeout=2.0).status_code == 200:
                 return True
@@ -364,14 +372,30 @@ def serve_bg(model: str, port: int | None = None, embedding: bool = False, quiet
     """
     port = port or (embed_port() if embedding else server_port())
     cmd = server_cmd(model, port=port, embedding=embedding)
-    sink = subprocess.DEVNULL if quiet else None
-    proc = subprocess.Popen(cmd, stdout=sink, stderr=sink)
+    # Quiet means "not on the student's terminal", NOT "discarded": if the server
+    # dies we have to be able to show them why. Log to a file and replay it.
+    log_path = repo_root() / "benchmarks" / ".llama-server.log"
+    log_path.parent.mkdir(exist_ok=True)
+    log = open(log_path, "w") if quiet else None
+    proc = subprocess.Popen(cmd, stdout=log or None, stderr=subprocess.STDOUT if log else None)
     try:
-        if not wait_healthy(port):
+        if not wait_healthy(port, proc=proc):
             proc.terminate()
+            if log:
+                log.flush()
+                log.close()
+                log = None
+            tail = ""
+            try:
+                tail = "".join(open(log_path).readlines()[-20:])
+            except OSError:
+                pass
+            died = proc.poll() is not None
+            why = (f"llama-server exited early (code {proc.returncode})." if died
+                   else f"llama-server did not become healthy on :{port} within 180s.")
             die(
-                f"llama-server did not become healthy on :{port} within 180s.",
-                f"Try running it in the foreground to see the error: make serve",
+                why + ("\n\nLast lines of the server log:\n" + tail if tail.strip() else ""),
+                f"Full log: {log_path}. To watch it live, run it in the foreground: make serve",
             )
         yield f"http://127.0.0.1:{port}"
     finally:
@@ -380,6 +404,8 @@ def serve_bg(model: str, port: int | None = None, embedding: bool = False, quiet
             proc.wait(timeout=15)
         except subprocess.TimeoutExpired:
             proc.kill()
+        if log:
+            log.close()
 
 
 # ─────────────────────────────────────────────────────────── llama-bench parsing

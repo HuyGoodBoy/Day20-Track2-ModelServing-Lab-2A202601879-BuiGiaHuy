@@ -109,6 +109,9 @@ instructor viết review riêng, tập trung vào chất lượng lập luận.
 Tất cả đều từ base track — **không cái nào cần bonus, GPU, hay compiler.**
 Chi tiết + tips: [`submission/screenshots/README.md`](submission/screenshots/README.md)
 
+> Tên file dưới đây là **gợi ý** (giữ số thứ tự để sắp đúng thứ tự chạy); grader map
+> chúng qua REFLECTION của bạn. `make verify` đếm đủ 5 ảnh **đã commit**, không ép tên.
+
 | # | File | Từ lệnh |
 |--:|---|---|
 | 1 | `01-hardware-probe.png` | `make probe` |

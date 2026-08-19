@@ -5,7 +5,14 @@
 # need no compiler and are new enough to load Gemma 4. Everything below is pure
 # Python and installs in seconds.
 
-huggingface_hub>=0.24.0   # model download (labs/00-setup/download-model.py)
-httpx>=0.27.0             # HTTP client for every track that talks to llama-server
-locust>=2.30.0            # load testing (labs/02-serve/load-test.py)
-numpy>=1.26.0             # cosine similarity in the bonus serving-regime demos
+# Upper bounds are deliberate. The lab parses locust's CSV schema and depends on
+# huggingface_hub's download API, so a future major release can break a student's run
+# with no change to lab code. Bounds are majors rather than exact pins: 40 students on
+# Windows/macOS/Linux and different Python versions need wheels to resolve, which an
+# exact lock generated on one machine cannot guarantee.
+# Last verified together: hf_hub 1.28.0, httpx 0.28.1, locust 2.46.3, numpy 2.5.2
+# on Python 3.14.3 (macOS arm64), full base track green.
+huggingface_hub>=0.24.0,<2   # model download (labs/00-setup/download-model.py)
+httpx>=0.27.0,<1             # HTTP client for every track that talks to llama-server
+locust>=2.30.0,<3            # load testing (labs/02-serve/load-test.py)
+numpy>=1.26.0,<3             # cosine similarity in the bonus serving-regime demos

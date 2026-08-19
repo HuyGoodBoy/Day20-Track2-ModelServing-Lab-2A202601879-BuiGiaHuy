@@ -36,10 +36,9 @@ TEMPLATE_MARKERS = [
     r"<X\.[XY]>",
 ]
 # Sections 1-5 are graded; section 6 onward is optional and may keep its template text.
-REQUIRED_END = "## 6. Bonus"
-# The template alone is ~1050 words, so a floor below that can never fire. Require
-# meaningfully more than the boilerplate the student started from.
-MIN_REFLECTION_WORDS = 1250
+# Matched loosely so renaming/translating the heading cannot turn the optional section
+# into blocking false positives.
+REQUIRED_END = re.compile(r"^##\s*6(?:[.)]|\s)", re.MULTILINE)
 # Every generated report ends with a section the student must replace.
 UNANSWERED = re.compile(r"required -- replace this line", re.IGNORECASE)
 
@@ -131,6 +130,29 @@ def any_file(r: Report, patterns: list[str], label: str, how: str) -> bool:
     return True
 
 
+def blank_table_cells(md: str) -> list[str]:
+    """Rows of a markdown table that still have an empty cell.
+
+    The template ships its data tables empty (`| UD-Q4_K_XL | | | ... |`); a student
+    who skips the measurements leaves them that way. Separator and header rows are
+    ignored, as is anything inside a fenced code block.
+    """
+    bad, in_fence = [], False
+    for line in md.splitlines():
+        s = line.strip()
+        if s.startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence or not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if all(re.fullmatch(r":?-{2,}:?", c or "") for c in cells):
+            continue                      # separator row
+        if any(c == "" for c in cells):
+            bad.append(s[:60])
+    return bad
+
+
 def check_manifest(r: Report) -> None:
     path = labkit.active_json()
     if not path.exists():
@@ -144,6 +166,9 @@ def check_manifest(r: Report) -> None:
     missing = [k for k in ("model", "repo_id", "primary_model", "compare_model") if not cfg.get(k)]
     if missing:
         r.fail(f"Model manifest: models/active.json lacks {missing} — re-run `make setup`")
+        return
+    if is_committed(path) is False:
+        r.fail("Model manifest: models/active.json is not committed — `git add models/active.json`")
         return
     r.ok(f"Model manifest: {cfg['model']} ({cfg.get('primary_quant')} + {cfg.get('compare_quant')})")
 
@@ -160,7 +185,8 @@ def check_reflection(r: Report) -> None:
         r.fail("Reflection: submission/REFLECTION.md is missing")
         return
     text = path.read_text()
-    required = text.split(REQUIRED_END)[0]
+    end = REQUIRED_END.search(text)
+    required = text[: end.start()] if end else text
     hits = [
         m.group().strip()
         for p in TEMPLATE_MARKERS
@@ -174,12 +200,17 @@ def check_reflection(r: Report) -> None:
             f"numbers and answers"
         )
         return
-    words = len(text.split())
-    if words < MIN_REFLECTION_WORDS:
-        r.fail(f"Reflection: only {words} words — sections 3, 4 and 5 need real content "
-               f"(the blank template is already ~1050 words)")
+    # A word count is a poor proxy (the blank template is already ~1050 words, and a
+    # student who trims the boilerplate can be shorter yet complete). Check the thing
+    # that actually matters instead: the required tables must have no empty cells.
+    blank = blank_table_cells(required)
+    if blank:
+        r.fail(
+            f"Reflection: {len(blank)} table row(s) with empty cells in sections 1-5 "
+            f"(e.g. \"{blank[0]}\") — paste your measured numbers in"
+        )
         return
-    r.ok(f"Reflection: submission/REFLECTION.md filled in ({words} words)")
+    r.ok(f"Reflection: submission/REFLECTION.md filled in ({len(text.split())} words)")
 
 
 def check_screenshots(r: Report) -> None:
@@ -192,6 +223,14 @@ def check_screenshots(r: Report) -> None:
         r.fail(
             f"Screenshots: {len(imgs)} of {MIN_SCREENSHOTS} required — "
             f"see submission/screenshots/README.md"
+        )
+        return
+    uncommitted = [p for p in imgs if is_committed(p) is False]
+    if uncommitted:
+        names = ", ".join(p.name for p in uncommitted[:3])
+        r.fail(
+            f"Screenshots: {len(uncommitted)} not committed ({names}) — `git add "
+            f"submission/screenshots/` or the grader cannot see them"
         )
         return
     r.ok(f"Screenshots: {len(imgs)} image(s)")
