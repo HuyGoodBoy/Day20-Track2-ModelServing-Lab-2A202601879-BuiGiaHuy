@@ -29,13 +29,25 @@ B5 exists in four flavours so that every platform can reach 20/20:
 
 | Your machine | B5 option |
 |---|---|
-| Apple Silicon | `make mlx-compare` — MLX vs llama.cpp Metal, same model |
+| Apple Silicon | `make mlx-compare` — MLX vs llama.cpp Metal, same model (needs `pip install mlx mlx-lm`) |
 | NVIDIA GPU | **C6** Vulkan vs CUDA — you already have the Vulkan/prebuilt side |
 | Anything at all | **C8** `make semantic-cache` — the cache above the KV cache |
 | Anything at all | **C9** `make serve-embed && make embed-demo` — the prefill-bound regime |
 
 C8 and C9 both run with `--offline` too (synthetic embeddings, no server), so you can
 read and reason about the logic even while a download is still going.
+
+Two things to know before you pick:
+
+- **MLX**: `mlx-lm` rejects ~140 parameters in Unsloth's Gemma 4 MLX weights on a strict
+  load, because Gemma 4 E2B shares KV across 20 of its 35 layers and mlx-lm builds only
+  the tensors it uses while the conversion kept all of them. `compare-mlx-vs-llama-cpp.py`
+  detects this, retries non-strictly, and prints a sample generation so you can confirm
+  the output is coherent before trusting any number. Verified working; do check that
+  sample.
+- **C8 semantic cache**: the lab ships one model, so the embedding server runs a *chat*
+  model in pooling mode. That is a weak encoder, and the exercise is to diagnose it
+  rather than to report a hit rate. Read C8 before you start.
 
 ---
 

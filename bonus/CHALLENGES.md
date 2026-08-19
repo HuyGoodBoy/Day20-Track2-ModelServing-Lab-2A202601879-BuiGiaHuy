@@ -118,9 +118,22 @@ make semantic-cache
 python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 ```
 
-Report your hit rate, the threshold you chose, and **one paraphrase that should have
-hit but did not**. Then explain the threshold trade-off: too low returns confidently
-wrong answers, too high never hits.
+**Important: the lab ships one model, so `make serve-embed` runs a *chat* model in
+pooling mode.** Mean-pooled decoder states are a weak embedder — you will see genuine
+paraphrases score *below* unrelated prompts. Do not report the raw hit rate as if it
+meant something; the interesting deliverable is the diagnosis:
+
+- name one **false hit** (an unrelated prompt that matched) and one **false miss**
+  (a real paraphrase that did not), with their similarity scores
+- show that no single threshold fixes both — that is the actual trade-off
+- explain *why* a decoder trained to predict next tokens makes a poor sentence encoder,
+  and what a dedicated embedding model (Qwen3-Embedding, BGE-M3, EmbeddingGemma) does
+  differently
+
+If you want the clean version of the curve, point `--embed-url` at a server running a
+real embedding GGUF and compare the two similarity distributions. That comparison —
+weak embedder vs proper embedder, same prompt stream — is a stronger submission than a
+hit-rate table from either one alone.
 
 Security note worth a sentence in your writeup: shared semantic and prefix caches can
 leak information across users through timing side channels, so production deployments

@@ -98,33 +98,76 @@ def bench_llama_cpp(model: str) -> dict:
             "decode_tok_s": round(statistics.median(rates), 1) if rates else 0.0}
 
 
+def load_mlx(repo_id: str):
+    """Load the MLX weights, working around a known Gemma 4 mismatch.
+
+    Gemma 4 E2B shares KV across 20 of its 35 layers (`num_kv_shared_layers: 20`).
+    mlx-lm builds only the tensors it needs for the unshared layers, but Unsloth's
+    conversion retained the full set -- so a strict load rejects ~140 "extra"
+    parameters that the model genuinely does not use.
+
+    Loading non-strictly is correct here, but we do NOT do it silently: the script
+    prints a sample generation so you can confirm the output is coherent before you
+    report any numbers. Weights loading is exactly the place a silent regression
+    hides.
+    """
+    from mlx_lm import load, utils
+
+    try:
+        return load(repo_id)
+    except ValueError as exc:
+        if "not in model" not in str(exc):
+            raise
+        from pathlib import Path
+
+        from huggingface_hub import snapshot_download
+        from transformers import AutoTokenizer
+
+        n = str(exc).split("Received ", 1)[-1].split(" ", 1)[0]
+        print(f"   note: mlx-lm rejected {n} parameters this model does not use.")
+        print("         Gemma 4 E2B shares KV across 20 layers; mlx-lm builds only the")
+        print("         unshared tensors while the conversion kept all of them.")
+        print("         Retrying with a non-strict load, then sanity-checking the output.")
+        path = Path(snapshot_download(repo_id))
+        model, _ = utils.load_model(path, strict=False)
+        return model, AutoTokenizer.from_pretrained(str(path))
+
+
 def bench_mlx(repo_id: str) -> dict:
     try:
-        from mlx_lm import load, stream_generate
+        from mlx_lm import stream_generate
     except ImportError:
         labkit.die("mlx-lm not installed.", "Run: pip install mlx mlx-lm")
     labkit.banner(f"MLX-LM  ({repo_id})")
     print("   loading (first run downloads the MLX weights) ...", flush=True)
-    model, tokenizer = load(repo_id)
+    model, tokenizer = load_mlx(repo_id)
 
-    def run(prompt: str) -> tuple[float, float] | None:
+    def run(prompt: str) -> tuple[float, float, str] | None:
         text = prompt
         if getattr(tokenizer, "chat_template", None):
             text = tokenizer.apply_chat_template(
                 [{"role": "user", "content": prompt}], tokenize=False, add_generation_prompt=True
             )
         t0 = time.perf_counter()
-        first, n = None, 0
+        first, n, out = None, 0, []
         for resp in stream_generate(model, tokenizer, prompt=text, max_tokens=MAX_TOKENS):
             if getattr(resp, "text", ""):
                 first = first or time.perf_counter()
                 n += 1
+                out.append(resp.text)
         end = time.perf_counter()
         if first is None or n < 2:
             return None
-        return (first - t0) * 1000.0, (n - 1) / max(end - first, 1e-6)
+        return (first - t0) * 1000.0, (n - 1) / max(end - first, 1e-6), "".join(out)
 
-    run("warm-up")
+    warm = run("Define TTFT in one sentence.")
+    if not warm:
+        labkit.die("MLX produced no tokens -- check the repo id with --mlx-repo.")
+    print("\n   sanity check -- is this coherent English?")
+    print(f'   "{warm[2].strip()[:180]}"')
+    print("   If that is garbage, the non-strict load dropped something it needed:")
+    print("   stop here and use a different B5 option (C6 / C8 / C9) instead.\n")
+
     ttfts, rates = [], []
     for prompt in PROMPTS:
         r = run(prompt)
@@ -151,7 +194,14 @@ def main() -> int:
     b = bench_mlx(mlx_repo)
 
     ratio = (b["decode_tok_s"] / a["decode_tok_s"]) if a["decode_tok_s"] else 0.0
-    winner = "MLX" if ratio > 1.05 else ("llama.cpp" if ratio < 0.95 else "neither (within 5%)")
+    # Same 10% band the report text tells the student to apply -- the two quantization
+    # schemes are not byte-identical, so a smaller gap is not a runtime finding.
+    if ratio > 1.10:
+        winner = "MLX"
+    elif ratio < 0.90:
+        winner = "llama.cpp"
+    else:
+        winner = "neither -- inside the 10% noise band"
 
     table = labkit.md_table(
         ["Runtime", "Weights", "TTFT P50 (ms)", "TTFT P95 (ms)", "Decode (tok/s)"],

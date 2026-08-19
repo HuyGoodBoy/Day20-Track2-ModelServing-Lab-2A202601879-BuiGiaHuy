@@ -208,8 +208,24 @@ def main() -> int:
 
     if not args.offline:
         print(f"==> chat {args.chat_url}  |  embeddings {args.embed_url}")
-        print("    (start both: `make serve` on :8080 and `make serve-embed` on :8081)\n")
-    run(STREAM, args.threshold, args.offline, args.chat_url, args.embed_url)
+        print("    (start both: `make serve` on :8080 and `make serve-embed` on :8081)")
+        print()
+        print("    !! Your embedding server is running a CHAT model in pooling mode, because the")
+        print("       lab ships one model. Mean-pooled decoder states are a WEAK embedder: expect")
+        print("       every pair to land in a narrow band (~0.5-0.9), real paraphrases to miss,")
+        print("       and unrelated prompts to hit. Read the table below as a diagnosis of the")
+        print("       embedder, not as a cache hit rate you could quote to anyone.")
+        print("       A dedicated embedding model (Qwen3-Embedding, BGE-M3, EmbeddingGemma)")
+        print("       separates paraphrases from strangers by a wide margin. That is the point.\n")
+    hits, n = run(STREAM, args.threshold, args.offline, args.chat_url, args.embed_url)
+
+    if not args.offline:
+        print()
+        print("--- Read your table before you write anything down ---")
+        print(" * Which rows are TRUE paraphrases? #3 and #6 paraphrase #1; #4 paraphrases #2;")
+        print("   #8 paraphrases #5. #7 is a NEW topic and must never hit.")
+        print(" * Count your false hits (a hit on #7) and your misses (#3, #4, #6, #8 not hitting).")
+        print(" * A threshold that fixes one usually breaks the other. That is the finding.")
 
     print("\n--- Teaching notes (Day 20 §5: the stack is 3 caches deep) ---")
     print(" * request -> [1] semantic cache (meaning) -> [2] prefix/KV cache -> [3] full inference.")
