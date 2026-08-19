@@ -325,6 +325,7 @@ Không commit `models/*.gguf` hoặc `runtime/`. Hai path này đã có trong `.
 | Hugging Face bị chặn | Xem [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md). |
 | Máy < 8 GB RAM | Dùng [`cloud/README.md`](cloud/README.md). |
 | `make verify` fail mà chưa rõ lý do | Output ghi đúng file còn thiếu và lệnh cần chạy. Đọc từng dòng lỗi. |
+| Sau checklist có dòng `make: *** [verify] Error 1` | Bình thường. Đó chỉ là cách `make` báo rằng `verify` tìm thấy mục còn thiếu — không phải `make` bị lỗi. Đọc checklist ở trên nó. |
 
 ## Các knob có thể đổi
 
