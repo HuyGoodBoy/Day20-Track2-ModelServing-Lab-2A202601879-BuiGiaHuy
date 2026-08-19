@@ -4,8 +4,10 @@
 Gemma 4 E2B ships in both formats from Unsloth, so this is a genuine runtime
 comparison rather than a model comparison:
 
-    llama.cpp   models/gemma-4-E2B-it-UD-Q4_K_XL.gguf   (Metal)
-    MLX         unsloth/gemma-4-E2B-it-UD-MLX-4bit      (unified memory)
+    llama.cpp   the GGUF from models/active.json          (Metal)
+    MLX         the matching MLX repo for that model      (unified memory)
+
+Works with either lab model (Gemma 4 E2B or Qwen3.5 0.8B).
 
 Both sides stream, so both TTFT numbers are measured the same way: wall-clock to
 the first decoded token, client-side.
@@ -190,7 +192,7 @@ def main() -> int:
 
     active = labkit.load_active()
     gguf = str(labkit.repo_root() / active["primary_model"])
-    mlx_repo = args.mlx_repo or active.get("mlx_repo") or labkit.MLX_REPO
+    mlx_repo = args.mlx_repo or active.get("mlx_repo") or labkit.mlx_repo()
 
     a = bench_llama_cpp(gguf)
     b = bench_mlx(mlx_repo)
@@ -211,7 +213,7 @@ def main() -> int:
           a["decode_tok_s"]],
          [b["runtime"], f"`{mlx_repo}`", b["ttft_p50"], b["ttft_p95"], b["decode_tok_s"]]],
     )
-    md = f"""# Bonus B5 - MLX vs llama.cpp Metal (Gemma 4 E2B)
+    md = f"""# Bonus B5 - MLX vs llama.cpp Metal
 
 Host `{labkit.host_tag()}` · {platform.processor() or "Apple Silicon"} ·
 llama.cpp `{labkit.LLAMA_CPP_BUILD}` · {len(PROMPTS)} prompts,

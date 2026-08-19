@@ -28,27 +28,123 @@ from pathlib import Path
 # build newer than that; this one is well past it. Bump deliberately, not casually.
 LLAMA_CPP_BUILD = "b10488"
 
-MODEL_REPO = "unsloth/gemma-4-E2B-it-GGUF"
-MODEL_PRIMARY = "gemma-4-E2B-it-UD-Q4_K_XL.gguf"   # ~3.18 GB - the lab default
-MODEL_COMPARE = "gemma-4-E2B-it-UD-Q2_K_XL.gguf"   # ~2.40 GB - the quantization contrast
-MODEL_MTP = "mtp-gemma-4-E2B-it.gguf"              # ~98 MB - bonus C1 (speculative decoding)
-MLX_REPO = "unsloth/gemma-4-E2B-it-UD-MLX-4bit"    # bonus B5 (Apple Silicon)
+# ── Model registry ────────────────────────────────────────────
+# Two options. Gemma 4 E2B is the default; Qwen3.5 0.8B is the small path for
+# laptops that cannot hold ~4 GB of weights, or for anyone who wants the whole
+# lab to run in a fraction of the time. Pick one with LAB_MODEL=<key>.
+MODELS: dict[str, dict] = {
+    "gemma4-e2b": {
+        "label": "Gemma 4 E2B",
+        "repo": "unsloth/gemma-4-E2B-it-GGUF",
+        "primary": ("UD-Q4_K_XL", "gemma-4-E2B-it-UD-Q4_K_XL.gguf", 2.97),
+        "compare": ("UD-Q2_K_XL", "gemma-4-E2B-it-UD-Q2_K_XL.gguf", 2.24),
+        "mtp": "mtp-gemma-4-E2B-it.gguf",              # bonus C1
+        "mlx_repo": "unsloth/gemma-4-E2B-it-UD-MLX-4bit",
+        "quant_ladder": ["UD-IQ2_M", "UD-IQ3_XXS", "UD-Q2_K_XL", "UD-Q3_K_XL",
+                         "UD-Q4_K_XL", "UD-Q5_K_XL", "UD-Q6_K_XL", "UD-Q8_K_XL"],
+        "quant_pattern": "gemma-4-E2B-it-{label}.gguf",
+        "min_ram_gb": 8.0,
+        "download_gb": 5.2,
+    },
+    "qwen35-0.8b": {
+        "label": "Qwen3.5 0.8B",
+        "repo": "unsloth/Qwen3.5-0.8B-GGUF",
+        "primary": ("Q4_K_M", "Qwen3.5-0.8B-Q4_K_M.gguf", 0.50),
+        "compare": ("UD-Q2_K_XL", "Qwen3.5-0.8B-UD-Q2_K_XL.gguf", 0.39),
+        "mtp": None,                                    # no MTP head published
+        "mlx_repo": "mlx-community/Qwen3.5-0.8B-4bit",
+        "quant_ladder": ["UD-IQ2_XXS", "UD-IQ2_M", "UD-Q2_K_XL", "UD-Q3_K_XL",
+                         "UD-Q4_K_XL", "UD-Q5_K_XL", "UD-Q6_K_XL", "UD-Q8_K_XL"],
+        "quant_pattern": "Qwen3.5-0.8B-{label}.gguf",
+        "min_ram_gb": 4.0,
+        "download_gb": 0.9,
+    },
+}
+DEFAULT_MODEL = "gemma4-e2b"
+SMALL_MODEL = "qwen35-0.8b"
 
-MIN_RAM_GB = 8.0  # below this, students take the cloud/ notebook fallback
+
+def model_key() -> str:
+    """Which model this run uses.
+
+    Order: LAB_MODEL env var, then whatever models/active.json recorded (so a
+    student who ran setup once does not have to keep exporting the variable),
+    then the default.
+    """
+    env = (os.environ.get("LAB_MODEL") or "").strip()
+    if env:
+        if env not in MODELS:
+            die(f"LAB_MODEL='{env}' is not a known model.",
+                f"Options: {', '.join(MODELS)}")
+        return env
+    p = active_json()
+    if p.exists():
+        try:
+            key = json.loads(p.read_text()).get("model_key")
+            if key in MODELS:
+                return key
+        except (ValueError, OSError):
+            pass
+    return DEFAULT_MODEL
+
+
+def model_spec(key: str | None = None) -> dict:
+    return MODELS[key or model_key()]
+
+
+def model_label(key: str | None = None) -> str:
+    return model_spec(key)["label"]
+
+
+def model_repo(key: str | None = None) -> str:
+    return model_spec(key)["repo"]
+
+
+def primary_file(key: str | None = None) -> str:
+    return model_spec(key)["primary"][1]
+
+
+def compare_file(key: str | None = None) -> str:
+    return model_spec(key)["compare"][1]
+
+
+def mtp_file(key: str | None = None) -> str | None:
+    return model_spec(key)["mtp"]
+
+
+def mlx_repo(key: str | None = None) -> str:
+    return model_spec(key)["mlx_repo"]
+
+
+def min_ram_gb(key: str | None = None) -> float:
+    return model_spec(key)["min_ram_gb"]
+
+
+def quant_ladder(key: str | None = None) -> list[str]:
+    return model_spec(key)["quant_ladder"]
+
+
+def quant_filename(label: str, key: str | None = None) -> str:
+    return model_spec(key)["quant_pattern"].format(label=label)
+
+
+# Absolute floor across both models -- below this, use the cloud notebook.
+MIN_RAM_GB = min(m["min_ram_gb"] for m in MODELS.values())
 
 HF_HOST = "https://huggingface.co"
 HF_MIRROR = "https://hf-mirror.com"   # same paths; useful when HF is blocked
 
 
-def model_repo_url(mirror: bool = False) -> str:
+def model_repo_url(mirror: bool = False, key: str | None = None) -> str:
     """Browsable page for the model repo."""
-    return f"{HF_MIRROR if mirror else HF_HOST}/{MODEL_REPO}"
+    return f"{HF_MIRROR if mirror else HF_HOST}/{model_repo(key)}"
 
 
-def model_file_url(filename: str, mirror: bool = False) -> str:
+def model_file_url(filename: str, mirror: bool = False, key: str | None = None) -> str:
     """Direct download URL for one GGUF file (what curl/wget want)."""
     host = HF_MIRROR if mirror else HF_HOST
-    return f"{host}/{MODEL_REPO}/resolve/main/{filename}"
+    return f"{host}/{model_repo(key)}/resolve/main/{filename}"
+
 
 DEFAULT_PORT = 8080
 EMBED_PORT = 8081

@@ -1,5 +1,6 @@
 {
-  "model": "gemma-4-E2B-it",
+  "model_key": "gemma4-e2b",
+  "model": "Gemma 4 E2B",
   "repo_id": "unsloth/gemma-4-E2B-it-GGUF",
   "primary_model": "models/gemma-4-E2B-it-UD-Q4_K_XL.gguf",
   "primary_quant": "UD-Q4_K_XL",

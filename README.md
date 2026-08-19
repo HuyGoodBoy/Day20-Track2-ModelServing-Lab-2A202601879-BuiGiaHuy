@@ -16,13 +16,16 @@ P99**, đẩy nó tới điểm bão hoà bằng load test, rồi tune một kno
 
 | | |
 |---|---|
-| **Model** | **Gemma 4 E2B** — [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) · Apache-2.0, không gated · **một** model cho cả lab |
+| **Model** | Chọn **một** trong hai (cả hai Apache-2.0, không gated): |
+| | **Gemma 4 E2B** — [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) · ~5.2 GB · cần 8 GB RAM · *mặc định* |
+| | **Qwen3.5 0.8B** — [unsloth/Qwen3.5-0.8B-GGUF](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF) · ~0.9 GB · cần 4 GB RAM · nhanh hơn, nhẹ hơn |
 | **Runtime** | **llama.cpp prebuilt binary** — tải 11–33 MB (bản Windows CUDA 140–240 MB), **không compile** |
-| **Cần** | Python ≥ 3.10 · **8 GB RAM** · ~10 GB đĩa |
+| **Cần** | Python ≥ 3.10 · **8 GB RAM** (hoặc **4 GB** với Qwen3.5 0.8B) · 3–10 GB đĩa |
 | **Không cần** | GPU · compiler · Docker · API key · tài khoản trả phí |
 | **OS** | Windows · macOS (Intel + Apple Silicon) · Linux |
 | **Windows** | Không có `make` → dùng **`.\lab.ps1 <target>`** (tên target giống hệt) |
-| **RAM < 8 GB?** | Dùng [`cloud/`](cloud/README.md) — Colab/Kaggle, **điểm không đổi** |
+| **RAM < 8 GB?** | `LAB_MODEL=qwen35-0.8b make setup` — chạy local với model nhỏ |
+| **RAM < 4 GB?** | Dùng [`cloud/`](cloud/README.md) — Colab/Kaggle, **điểm không đổi** |
 
 > **Số liệu của bạn không so sánh được với bạn cùng lớp.** Chỉ so **before vs after trên
 > chính máy bạn**. Rubric chấm độ rõ ràng của setup + đo lường + **lập luận**, không chấm

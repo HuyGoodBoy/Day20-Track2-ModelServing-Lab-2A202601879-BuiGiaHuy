@@ -146,6 +146,16 @@ def detect_gpu() -> dict:
     return {"backends": backends, "details": details}
 
 
+def pick_model(ram: float) -> tuple[str, str]:
+    """(model key, why). Small model when RAM cannot comfortably hold the default."""
+    default = labkit.MODELS[labkit.DEFAULT_MODEL]
+    if (os.environ.get("LAB_MODEL") or "").strip():
+        return labkit.model_key(), "chosen with LAB_MODEL"
+    if ram >= default["min_ram_gb"]:
+        return labkit.DEFAULT_MODEL, "enough RAM for the default model"
+    return labkit.SMALL_MODEL, f"{ram} GB RAM is under the {default['min_ram_gb']} GB the default model wants"
+
+
 def recommend(cpu: dict, ram: float, gpu: dict) -> dict:
     b = gpu["backends"]
     if b["nvidia_cuda"]:
@@ -159,16 +169,21 @@ def recommend(cpu: dict, ram: float, gpu: dict) -> dict:
     else:
         backend, cmake = "CPU", ""
 
-    ram_ok = ram >= labkit.MIN_RAM_GB
+    model_key, why = pick_model(ram)
+    spec = labkit.model_spec(model_key)
+    ram_ok = ram >= spec["min_ram_gb"]
     paths = ["01-measure", "02-serve", "03-integrate", "bonus/sweeps"]
     if b["apple_metal"]:
         paths.append("bonus/mlx")
 
     return {
         "recommended_paths": paths,
-        "model_repo": labkit.MODEL_REPO,
-        "primary_model_file": labkit.MODEL_PRIMARY,
-        "compare_model_file": labkit.MODEL_COMPARE,
+        "model_key": model_key,
+        "model_choice_reason": why,
+        "model_label": spec["label"],
+        "model_repo": spec["repo"],
+        "primary_model_file": spec["primary"][1],
+        "compare_model_file": spec["compare"][1],
         "llama_cpp_backend": backend,
         "llama_cpp_cmake_flag": cmake,
         "llama_cpp_build": labkit.LLAMA_CPP_BUILD,
@@ -196,9 +211,16 @@ def main() -> int:
     for k, v in gpu["details"].items():
         print(f"             - {k}: {v}")
     print(line)
-    print(f"\n  Model         : {labkit.MODEL_REPO}")
-    print(f"                  primary  {labkit.MODEL_PRIMARY}   (~3.2 GB)")
-    print(f"                  compare  {labkit.MODEL_COMPARE}   (~2.4 GB)")
+    spec = labkit.model_spec(rec["model_key"])
+    print(f"\n  Model         : {spec['label']}  [LAB_MODEL={rec['model_key']}]")
+    print(f"                  {spec['repo']}  (~{spec['download_gb']} GB)")
+    print(f"                  primary  {spec['primary'][1]}  ({spec['primary'][2]} GB)")
+    print(f"                  compare  {spec['compare'][1]}  ({spec['compare'][2]} GB)")
+    print(f"                  chosen because: {rec['model_choice_reason']}")
+    alt = next(k for k in labkit.MODELS if k != rec["model_key"])
+    a = labkit.MODELS[alt]
+    print(f"  Other option  : LAB_MODEL={alt}  ->  {a['label']}, ~{a['download_gb']} GB, "
+          f"needs {a['min_ram_gb']} GB RAM")
     print(f"  llama.cpp     : prebuilt release {labkit.LLAMA_CPP_BUILD}, backend {rec['llama_cpp_backend']}")
     print(f"  Tracks open   : {', '.join(rec['recommended_paths'])}")
     env = os.environ.get("LAB_RUNTIME_ENV")
@@ -206,7 +228,8 @@ def main() -> int:
         print(f"  Running on    : {env}  (declare this in REFLECTION section 1)")
 
     if not rec["ram_sufficient"]:
-        print(f"\n  !! {ram} GB RAM is below the {labkit.MIN_RAM_GB} GB floor for Gemma 4 E2B.")
+        print(f"\n  !! {ram} GB RAM is below the {spec['min_ram_gb']} GB floor even for "
+              f"{spec['label']}.")
         print("     Run the lab in cloud/Day20-lab.ipynb (Colab or Kaggle) instead,")
         print("     and say so in REFLECTION.md section 1. Grading is unaffected.")
     print(line)

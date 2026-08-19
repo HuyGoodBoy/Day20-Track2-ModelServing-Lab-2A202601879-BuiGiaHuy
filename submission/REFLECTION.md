@@ -23,7 +23,8 @@
 - **RAM:** _<GB>_
 - **Accelerator:** _<NVIDIA RTX 4060 / Apple Metal / Vulkan / CPU only>_
 - **llama.cpp asset đã tải:** _<vd: llama-b10488-bin-macos-arm64.tar.gz>_
-- **Model:** `gemma-4-E2B-it` — `UD-Q4_K_XL` (primary) + `UD-Q2_K_XL` (compare)
+- **Model đã dùng:** _<Gemma 4 E2B / Qwen3.5 0.8B>_ (`LAB_MODEL=`_<gemma4-e2b / qwen35-0.8b>_)
+- **Quantization:** _<primary>_ + _<compare>_ (từ `models/active.json`)
 
 **Chạy ở đâu:** _<laptop của tôi / Colab / Kaggle>_
 _(Nếu dùng cloud fallback: nói rõ vì sao — RAM < 8 GB, setup fail, v.v. Không mất điểm.)_

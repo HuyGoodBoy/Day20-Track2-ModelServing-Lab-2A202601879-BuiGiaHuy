@@ -50,23 +50,49 @@ Bạn sẽ thấy thông tin về CPU, số core, RAM, accelerator và model dù
 
 → **Chụp screenshot ngay:** `submission/screenshots/01-hardware-probe.png`
 
-## Bước 0.2 — Model dùng trong lab (biết trước để chuẩn bị)
+## Bước 0.2 — Chọn model
 
-Cả lab dùng **một** model: **[unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)** — Apache-2.0,
-**không gated**, không cần token, không cần bấm accept license.
+Lab có **hai** option. Cả hai Apache-2.0, **không gated** (không token, không accept license).
+Chọn một, làm hết lab với nó.
 
-| Vai trò | File | Size | Link tải trực tiếp |
-|---|---|--:|---|
-| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | 2.97 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf) |
-| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` | 2.24 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q2_K_XL.gguf) |
-| bonus C1 (optional) | `mtp-gemma-4-E2B-it.gguf` | 0.09 GB | [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/mtp-gemma-4-E2B-it.gguf) |
+| | **Gemma 4 E2B** *(mặc định)* | **Qwen3.5 0.8B** *(nhỏ, nhanh)* |
+|---|---|---|
+| Repo | [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) | [unsloth/Qwen3.5-0.8B-GGUF](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF) |
+| Tải về | ~5.2 GB | **~0.9 GB** |
+| RAM tối thiểu | 8 GB | **4 GB** |
+| Model load | ~6 s | **~3 s** |
+| Decode (M1, Metal) | ~27 tok/s | **~42 tok/s** |
+| Chất lượng câu trả lời | tốt hơn | thấp hơn (0.8B là 0.8B) |
+| Bonus C1 (MTP spec-decode) | có MTP head | không có |
 
-**Bước 0.3 (`make setup`) tự tải 2 file đầu** — bạn không cần làm gì thủ công. Bảng trên
-để bạn biết mình đang tải cái gì, và để dùng khi mạng trường chặn Hugging Face.
+**Chọn thế nào:**
 
-Xem toàn bộ file trong repo: **[unsloth/gemma-4-E2B-it-GGUF/tree/main](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/tree/main)**
+- **RAM ≥ 8 GB, muốn câu trả lời tử tế** → Gemma 4 E2B. Không cần làm gì, đây là mặc định.
+- **RAM 4–8 GB, hoặc muốn chạy nhanh gấp 5 lần** → Qwen3.5 0.8B:
 
-Nếu tải tự động fail, script sẽ in ra đúng lệnh `curl` cần chạy. Chi tiết:
+  ```bash
+  export LAB_MODEL=qwen35-0.8b      # macOS / Linux
+  $env:LAB_MODEL = 'qwen35-0.8b'    # Windows PowerShell
+  ```
+
+  Set **trước** khi chạy `make setup`. Sau đó `models/active.json` ghi lại lựa chọn, nên
+  các bước sau tự dùng đúng model — bạn không cần export lại mỗi lần.
+
+**Rubric không quan tâm bạn chọn model nào.** Cả hai đều cho đủ TTFT/TPOT/percentile,
+load test, batching và tuning story. Model nhỏ thậm chí làm phần load test dễ đọc hơn vì
+mỗi request xong nhanh hơn nên bạn thu được nhiều mẫu hơn trong 60 s.
+
+### File sẽ được tải
+
+| Vai trò | Gemma 4 E2B | Qwen3.5 0.8B |
+|---|---|---|
+| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` (2.97 GB) [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q4_K_XL.gguf) | `Qwen3.5-0.8B-Q4_K_M.gguf` (0.50 GB) [tải](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf) |
+| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` (2.24 GB) [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/gemma-4-E2B-it-UD-Q2_K_XL.gguf) | `Qwen3.5-0.8B-UD-Q2_K_XL.gguf` (0.39 GB) [tải](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-UD-Q2_K_XL.gguf) |
+| bonus C1 | `mtp-gemma-4-E2B-it.gguf` (0.09 GB) [tải](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF/resolve/main/mtp-gemma-4-E2B-it.gguf) | — |
+
+**Bước 0.3 (`make setup`) tự tải hai file đầu.** Bảng trên để bạn biết mình đang tải gì, và
+để dùng khi mạng trường chặn Hugging Face. Nếu tải tự động fail, script in ra đúng lệnh
+`curl` cần chạy — chi tiết trong
 [`labs/00-setup/MANUAL-DOWNLOAD.md`](labs/00-setup/MANUAL-DOWNLOAD.md).
 
 ---
@@ -113,13 +139,16 @@ make bench
 Script tự bật `llama-server`, gửi 10 prompt qua HTTP streaming, tắt server, rồi lặp lại
 với quantization thứ hai. Bước này mất vài phút.
 
-Bạn sẽ thấy bảng tương tự:
+Bạn sẽ thấy bảng tương tự (ví dụ: Gemma 4 E2B trên M1):
 
 ```
 | Quantization | Size (GB) | TTFT P50/P95 | TPOT P50/P95 | Decode (tok/s) |
 | UD-Q4_K_XL   | 2.97      | 194 / 203    | 37.0 / 40.7  | 27.0           |
 | UD-Q2_K_XL   | 2.24      | 202 / 479    | 33.9 / 34.9  | 29.5           |
 ```
+
+Với Qwen3.5 0.8B trên cùng máy, con số nhanh hơn rõ rệt (~42 và ~50 tok/s). **Đừng so số
+của bạn với hai bảng này** — chúng chỉ để bạn biết output trông ra sao.
 
 → Sinh ra: **`benchmarks/01-quickstart-results.md`** *(rubric 3, 4, 5)*
 

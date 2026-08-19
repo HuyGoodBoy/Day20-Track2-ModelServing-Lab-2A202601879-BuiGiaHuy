@@ -42,13 +42,19 @@ read and reason about the logic even while a download is still going.
 
 Two things to know before you pick:
 
+- **Model matters for one challenge only.** C1 (speculative decoding) needs Gemma 4 E2B's
+  MTP head; Qwen3.5 0.8B has none. Everything else here — B1, B2, B3, B5, and challenges
+  C2-C10 — works with either model. The sweeps read the quantization ladder from the model
+  registry, so `make sweep-quant` adapts automatically.
+
 - **MLX**: `mlx-lm` rejects ~140 parameters in Unsloth's Gemma 4 MLX weights on a strict
   load, because Gemma 4 E2B shares KV across 20 of its 35 layers and mlx-lm builds only
   the tensors it uses while the conversion kept all of them. `compare-mlx-vs-llama-cpp.py`
   detects this, retries non-strictly, and prints a sample generation so you can confirm
   the output is coherent before trusting any number. Verified working; do check that
   sample.
-- **C8 semantic cache**: the lab ships one model, so the embedding server runs a *chat*
+- **C8 semantic cache**: the lab has no dedicated embedding model, so the embedding server
+  runs your *chat*
   model in pooling mode. That is a weak encoder, and the exercise is to diagnose it
   rather than to report a hit rate. Read C8 before you start.
 

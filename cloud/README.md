@@ -3,9 +3,18 @@
 > Các bước của lab không đổi: **[GUIDE.md](../GUIDE.md)**
 
 Đây là **phương án fallback**, không phải cách chạy mặc định. Hãy dùng
-[`Day20-lab.ipynb`](Day20-lab.ipynb) khi laptop có dưới **8 GB RAM**, hoặc khi setup
-local gặp lỗi bạn không thể xử lý. Gemma 4 E2B cần khoảng 4 GB RAM riêng cho inference,
-vì vậy lab đặt mức tối thiểu là 8 GB RAM.
+[`Day20-lab.ipynb`](Day20-lab.ipynb) khi laptop có dưới **4 GB RAM**, hoặc khi setup local
+gặp lỗi bạn không thể xử lý.
+
+> **Thử cách này trước.** Nếu máy bạn có 4–8 GB RAM, bạn vẫn chạy được lab **local** với
+> model nhỏ:
+>
+> ```bash
+> LAB_MODEL=qwen35-0.8b make setup
+> ```
+>
+> Qwen3.5 0.8B chỉ ~0.9 GB và cần 4 GB RAM. Chạy local luôn tốt hơn cloud vì bạn đo được
+> chính máy mình — đó là mục đích của lab.
 
 ## Dùng cloud không mất điểm
 
@@ -30,6 +39,10 @@ tắt, notebook không thể tải model.
 Trong cell đầu tiên, sửa `REPO_URL` để trỏ tới fork của **bạn**.
 
 ## CPU hay GPU?
+
+Trên VM 2 vCPU, model nhỏ là lựa chọn hợp lý hơn. Set trong cell đầu:
+`LAB_MODEL = 'qwen35-0.8b'` — tải nhanh hơn ~6 lần và decode nhanh hơn, nên cả notebook
+chạy xong nhanh hơn nhiều.
 
 Notebook mặc định dùng `RUNTIME = 'cpu'`. Đây là cấu hình chủ đích và chạy được toàn bộ
 base track, nhưng chậm hơn. Với 2 vCPU, mỗi benchmark có thể mất vài phút.

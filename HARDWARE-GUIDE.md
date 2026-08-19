@@ -10,38 +10,47 @@
 
 | | Yêu cầu |
 |---|---|
-| RAM | **8 GB** (bắt buộc) |
-| Đĩa trống | ~10 GB (5.2 GB model + ~0.5 GB runtime/deps + chỗ thở) |
+| RAM | **8 GB** với Gemma 4 E2B · **4 GB** với Qwen3.5 0.8B (`LAB_MODEL=qwen35-0.8b`) |
+| Đĩa trống | ~10 GB (Gemma) hoặc ~3 GB (Qwen3.5 0.8B), gồm runtime + deps |
 | Python | ≥ 3.10 |
 | GPU | **không cần** |
 | Compiler | **không cần** (chỉ bonus B1 mới cần cmake) |
 | Docker | **không cần bao giờ** |
 
-**RAM < 8 GB?** Dùng [`cloud/`](cloud/README.md) (Colab hoặc Kaggle) và khai báo ở
+**RAM < 8 GB?** Chạy local với model nhỏ: `LAB_MODEL=qwen35-0.8b make setup`.
+**RAM < 4 GB?** Dùng [`cloud/`](cloud/README.md) (Colab hoặc Kaggle) và khai báo ở
 REFLECTION §1. Điểm không bị ảnh hưởng — rubric chấm lập luận, không chấm phần cứng.
 
-## 2. Model — một model duy nhất cho cả lab
+## 2. Model — chọn một trong hai
 
-[`unsloth/gemma-4-E2B-it-GGUF`](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)
-· Apache-2.0 · **không gated** (không cần token, không cần bấm accept license).
+Cả hai Apache-2.0, **không gated**: không token, không accept license.
 
-| Vai trò | File | Kích thước |
-|---|---|--:|
-| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` | ~3.2 GB |
-| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` | ~2.4 GB |
-| bonus C1 | `mtp-gemma-4-E2B-it.gguf` (MTP head) | ~98 MB |
-| bonus B5 | `unsloth/gemma-4-E2B-it-UD-MLX-4bit` (MLX format) | tải riêng |
+| | **Gemma 4 E2B** *(mặc định)* | **Qwen3.5 0.8B** |
+|---|---|---|
+| Repo | [unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF) | [unsloth/Qwen3.5-0.8B-GGUF](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF) |
+| `LAB_MODEL=` | `gemma4-e2b` | `qwen35-0.8b` |
+| primary | `gemma-4-E2B-it-UD-Q4_K_XL.gguf` — 2.97 GB | `Qwen3.5-0.8B-Q4_K_M.gguf` — 0.50 GB |
+| compare | `gemma-4-E2B-it-UD-Q2_K_XL.gguf` — 2.24 GB | `Qwen3.5-0.8B-UD-Q2_K_XL.gguf` — 0.39 GB |
+| Tổng tải | ~5.2 GB | **~0.9 GB** |
+| RAM tối thiểu | 8 GB | **4 GB** |
+| Context | 128K | 256K |
+| Bonus C1 (MTP) | có `mtp-gemma-4-E2B-it.gguf` | không có |
+| Bonus B5 (MLX) | `unsloth/gemma-4-E2B-it-UD-MLX-4bit` | `mlx-community/Qwen3.5-0.8B-4bit` |
 
-**"E2B"** = *effective* 2B tham số. Gemma 4 E2B dùng per-layer embeddings, nên tổng
-số tham số lớn hơn 2B nhưng chi phí tính toán mỗi token tương đương một model 2B.
-Đó là lý do file 4-bit ~3.2 GB chứ không phải ~1.2 GB. Unsloth ghi nhận E2B 4-bit
-cần **~4 GB** RAM khi inference — vừa đủ thoải mái trên 8 GB.
+**Gemma 4 E2B**: "E2B" = *effective* 2B tham số. Model dùng per-layer embeddings nên tổng
+tham số lớn hơn 2B, còn chi phí tính toán mỗi token tương đương một model 2B. Đó là lý do
+file 4-bit ~3 GB chứ không phải ~1.2 GB.
 
-**"UD"** = Unsloth Dynamic: các layer nhạy cảm được giữ ở precision cao hơn. Nhờ vậy
-`UD-Q2_K_XL` dùng được thật, khác với `Q2_K` phẳng thường hỏng hẳn — làm cho phần so
-sánh quantization ở §1 trở thành câu hỏi mở, không phải kết luận biết trước.
+**Qwen3.5 0.8B**: nhỏ hơn ~6 lần, load nhanh hơn gấp đôi, decode nhanh hơn ~1.5 lần trên
+cùng máy. Đánh đổi là chất lượng câu trả lời — 0.8B tham số thì đúng như 0.8B tham số. Với
+một lab về **latency và throughput** thì đây là đánh đổi hoàn toàn hợp lý, và bản thân việc
+so hai model cũng là một quan sát đáng viết.
 
-Cả lab chỉ cần 2 file trên. Bonus `make sweep-quant` mới tải thêm.
+**"UD"** = Unsloth Dynamic: các layer nhạy cảm được giữ ở precision cao hơn, nên bản 2-bit
+dùng được thật thay vì hỏng hẳn như `Q2_K` phẳng. Riêng Qwen3.5 0.8B dùng `Q4_K_M` chuẩn
+làm primary (repo không có `Q2_K` phẳng để so, nên compare là `UD-Q2_K_XL`).
+
+Cả lab chỉ cần 2 file. Bonus `make sweep-quant` mới tải thêm.
 
 ## 3. Runtime — prebuilt, không compile
 

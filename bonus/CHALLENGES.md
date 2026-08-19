@@ -12,6 +12,10 @@ is pinned to build `b10488`.
 
 ## C1. Speculative decoding with Gemma 4's own MTP head
 
+> **Needs `LAB_MODEL=gemma4-e2b`.** Qwen3.5 0.8B publishes no MTP head, so this challenge
+> is Gemma-only. On the small model, pick a different challenge — C2, C5, C7, C8 or C9 all
+> work with either.
+
 Gemma 4 E2B ships an **MTP (multi-token prediction) head** as a separate GGUF, which
 means you do not have to go hunting for a tokenizer-compatible draft model — the
 matched draft is published alongside the target.
@@ -118,7 +122,7 @@ make semantic-cache
 python bonus/serving-regimes/semantic-cache-demo.py --offline --sweep
 ```
 
-**Important: the lab ships one model, so `make serve-embed` runs a *chat* model in
+**Important: the lab has no dedicated embedding model, so `make serve-embed` runs a *chat* model in
 pooling mode.** Mean-pooled decoder states are a weak embedder — you will see genuine
 paraphrases score *below* unrelated prompts. Do not report the raw hit rate as if it
 meant something; the interesting deliverable is the diagnosis:

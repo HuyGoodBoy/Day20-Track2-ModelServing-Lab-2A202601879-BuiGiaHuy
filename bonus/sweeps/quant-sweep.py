@@ -23,19 +23,18 @@ import urllib.request
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "lib"))
 import labkit  # noqa: E402
 
-# The full UD ladder available in unsloth/gemma-4-E2B-it-GGUF.
-LADDER = ["UD-IQ2_M", "UD-IQ3_XXS", "UD-Q2_K_XL", "UD-Q3_K_XL",
-          "UD-Q4_K_XL", "UD-Q5_K_XL", "UD-Q6_K_XL", "UD-Q8_K_XL"]
+# Ladder comes from the model registry, so this works for either lab model.
+LADDER = labkit.quant_ladder()
 DEFAULT_GRID = ["UD-Q2_K_XL", "UD-Q4_K_XL", "UD-Q6_K_XL"]
 
 
 def filename_for(label: str) -> str:
-    return f"gemma-4-E2B-it-{label}.gguf"
+    return labkit.quant_filename(label)
 
 
 def remote_sizes() -> dict[str, int]:
     """Ask the Hub how big each file is, so we can warn before downloading."""
-    url = f"https://huggingface.co/api/models/{labkit.MODEL_REPO}?blobs=true"
+    url = f"https://huggingface.co/api/models/{labkit.model_repo()}?blobs=true"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "day20-lab"})
         data = json.loads(urllib.request.urlopen(req, timeout=30).read())
@@ -100,7 +99,7 @@ def main() -> int:
         path = local_path(fname)
         if not path:
             print(f"\n==> Downloading {label}")
-            path = pathlib.Path(hf_hub_download(repo_id=labkit.MODEL_REPO, filename=fname,
+            path = pathlib.Path(hf_hub_download(repo_id=labkit.model_repo(), filename=fname,
                                                 local_dir=str(models_dir)))
         size_gb = path.stat().st_size / 1024**3
         out = labkit.run_bench(["-m", str(path), "-t", str(threads), "-ngl", str(ngl),
@@ -120,7 +119,7 @@ def main() -> int:
           f"{r['tok_s'] / r['size_gb']:.1f}" if r["size_gb"] else "-"] for r in rows],
     )
 
-    md = f"""# Bonus - Quantization sweep (Gemma 4 E2B, Unsloth Dynamic ladder)
+    md = f"""# Bonus - Quantization sweep ({labkit.model_label()}, Unsloth Dynamic ladder)
 
 Host `{labkit.host_tag()}` · llama.cpp `{labkit.LLAMA_CPP_BUILD}` ·
 `threads={threads}` `ngl={ngl}` · metric `{args.metric}`

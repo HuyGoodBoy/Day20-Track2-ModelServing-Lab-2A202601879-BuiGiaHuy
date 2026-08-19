@@ -28,13 +28,16 @@ def main() -> int:
     step("1/3  Probing hardware", "detect-hardware.py")
 
     hw = labkit.load_hardware()
-    if not hw["recommendation"]["ram_sufficient"]:
+    rec = hw["recommendation"]
+    if not rec["ram_sufficient"]:
         print(f"\n  !! {hw['ram_gb']} GB RAM < {labkit.MIN_RAM_GB} GB floor.")
         print("     Setup will continue, but expect swapping. The supported path for")
         print("     this machine is cloud/Day20-lab.ipynb (Colab / Kaggle).")
 
     step("2/3  Fetching the llama.cpp runtime", "fetch-runtime.py")
-    step("3/3  Downloading Gemma 4 E2B (two quantizations, ~5.2 GB)", "download-model.py")
+    spec = labkit.model_spec(rec.get("model_key"))
+    step(f"3/3  Downloading {spec['label']} (two quantizations, ~{spec['download_gb']} GB)",
+         "download-model.py")
 
     labkit.banner("Setup complete")
     win = sys.platform == "win32"

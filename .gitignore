@@ -5,7 +5,11 @@ __pycache__/
 .env
 .DS_Store
 
-# ── Model weights: large, re-downloadable. The manifest IS committed. ──
+# ── Model weights: large, re-downloadable. ──
+# models/active.json is un-ignored because STUDENTS must commit theirs (rubric item 2).
+# The template repo must NOT ship one, or verify.py passes the model check before the
+# student has downloaded anything. If you are maintaining this repo: after `git add -A`,
+# check `git ls-files models/` is empty before committing.
 models/*
 !models/active.json
 

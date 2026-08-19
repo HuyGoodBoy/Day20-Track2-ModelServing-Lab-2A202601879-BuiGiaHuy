@@ -3,7 +3,16 @@
 Dùng trang này khi `make setup` không tải được model (mạng trường chặn Hugging Face,
 captive portal, mạng quá chậm).
 
-## Model của lab
+## Chọn model trước
+
+Lab có hai option — tải đúng bộ của model bạn chọn (xem [GUIDE.md](../../GUIDE.md) Bước 0.2):
+
+| `LAB_MODEL=` | Model | Tổng tải |
+|---|---|--:|
+| `gemma4-e2b` *(mặc định)* | Gemma 4 E2B | ~5.2 GB |
+| `qwen35-0.8b` | Qwen3.5 0.8B | ~0.9 GB |
+
+## Option A — Gemma 4 E2B (mặc định)
 
 **[unsloth/gemma-4-E2B-it-GGUF](https://huggingface.co/unsloth/gemma-4-E2B-it-GGUF)**
 — Apache-2.0, **không gated**: không cần login, không cần token, không cần accept license.
@@ -18,7 +27,33 @@ Xem toàn bộ file: **[tree/main](https://huggingface.co/unsloth/gemma-4-E2B-it
 
 Bạn cần **hai file đầu**. Thiếu file `compare` thì mất hàng thứ hai của rubric 3–5.
 
-## Cách 1 — curl / wget
+## Option B — Qwen3.5 0.8B (nhỏ, ~0.9 GB)
+
+**[unsloth/Qwen3.5-0.8B-GGUF](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF)** — Apache-2.0, không gated.
+Xem file: [tree/main](https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/tree/main)
+
+| Vai trò | File | Size |
+|---|---|--:|
+| primary | `Qwen3.5-0.8B-Q4_K_M.gguf` | 0.50 GB |
+| compare | `Qwen3.5-0.8B-UD-Q2_K_XL.gguf` | 0.39 GB |
+
+```bash
+mkdir -p models
+curl -L -o models/Qwen3.5-0.8B-Q4_K_M.gguf \
+  https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-Q4_K_M.gguf
+curl -L -o models/Qwen3.5-0.8B-UD-Q2_K_XL.gguf \
+  https://huggingface.co/unsloth/Qwen3.5-0.8B-GGUF/resolve/main/Qwen3.5-0.8B-UD-Q2_K_XL.gguf
+```
+
+Rồi ghi manifest với **cùng** `LAB_MODEL` bạn dùng:
+
+```bash
+LAB_MODEL=qwen35-0.8b python labs/00-setup/download-model.py --skip-download
+```
+
+---
+
+## Cách 1 — curl / wget (cho Gemma 4 E2B)
 
 Chạy ở **repo root**:
 
@@ -74,7 +109,8 @@ tìm đệ quy.
 ## Sau khi có file: ghi manifest
 
 ```bash
-python labs/00-setup/download-model.py --skip-download
+python labs/00-setup/download-model.py --skip-download                    # Gemma
+LAB_MODEL=qwen35-0.8b python labs/00-setup/download-model.py --skip-download   # Qwen
 ```
 
 Lệnh này không tải gì, chỉ tìm file và ghi `models/active.json` (rubric item 2). Thêm
@@ -94,7 +130,8 @@ Nếu server báo lỗi lạ khi load model, khả năng cao file bị tải thi
 ls -l models/*.gguf
 ```
 
-Phải khớp bảng ở trên (2.97 GB và 2.24 GB). File nhỏ hơn đáng kể = tải dở, xoá và tải lại.
+Phải khớp bảng của model bạn chọn (Gemma: 2.97 + 2.24 GB · Qwen: 0.50 + 0.39 GB).
+File nhỏ hơn đáng kể = tải dở, xoá và tải lại.
 
 ## Nếu tên file không khớp
 
@@ -117,5 +154,6 @@ Tải asset đúng platform của bạn từ
 
 ## Vẫn không được?
 
-Máy dưới 8 GB RAM hoặc mạng không thông: dùng [`cloud/`](../../cloud/README.md)
+Máy dưới 8 GB RAM: thử `LAB_MODEL=qwen35-0.8b` trước — chỉ ~0.9 GB.
+Dưới 4 GB RAM hoặc mạng không thông: dùng [`cloud/`](../../cloud/README.md)
 (Colab / Kaggle). Điểm không bị ảnh hưởng, chỉ cần khai báo ở REFLECTION §1.
