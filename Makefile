@@ -9,6 +9,19 @@ SYSPY    := python3
 # Override if 8080 is taken (Colab runs its own service there): LAB_SERVER_PORT=8090
 PORT     := $(or $(LAB_SERVER_PORT),8080)
 
+# Parallel compile jobs for `make build-llama` (bonus B1). A bare `cmake --build -j`
+# means UNLIMITED jobs; with -DGGML_CUDA=ON each nvcc translation unit can take
+# several GB and the OOM killer takes the build down with "Error 137". Budget one
+# job per 4 GB of RAM, capped at the core count, floor of 1.
+CORES     := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+RAM_GB    := $(shell awk '/MemTotal/ {printf "%d", $$2/1048576}' /proc/meminfo 2>/dev/null \
+                     || sysctl -n hw.memsize 2>/dev/null | awk '{printf "%d", $$1/1073741824}' \
+                     || echo 8)
+BUILD_JOBS := $(or $(LLAMA_BUILD_JOBS),$(shell \
+                 j=$$(( $(RAM_GB) / 4 )); \
+                 [ $$j -gt $(CORES) ] && j=$(CORES); \
+                 [ $$j -lt 1 ] && j=1; echo $$j))
+
 OS := $(shell uname -s 2>/dev/null || echo Windows)
 
 .DEFAULT_GOAL := help
@@ -117,7 +130,7 @@ build-llama: venv-check ## B1 - build llama.cpp from source and beat the prebuil
 	  fi; \
 	  cd llama.cpp; \
 	  cmake -B build $(LLAMA_CMAKE_FLAGS) -DGGML_NATIVE=ON -DCMAKE_BUILD_TYPE=Release; \
-	  cmake --build build -j --config Release'
+	  cmake --build build -j $(BUILD_JOBS) --config Release'
 	@echo ""
 	@echo "Built. Now compare it against the prebuilt binary you have been using:"
 	@echo "  $(PY) bonus/compare-builds.py"

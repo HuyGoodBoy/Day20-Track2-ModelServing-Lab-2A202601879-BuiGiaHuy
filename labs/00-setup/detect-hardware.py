@@ -221,7 +221,27 @@ def main() -> int:
     a = labkit.MODELS[alt]
     print(f"  Other option  : LAB_MODEL={alt}  ->  {a['label']}, ~{a['download_gb']} GB, "
           f"needs {a['min_ram_gb']} GB RAM")
-    print(f"  llama.cpp     : prebuilt release {labkit.LLAMA_CPP_BUILD}, backend {rec['llama_cpp_backend']}")
+    # The prebuilt asset is chosen at `make setup` from what upstream actually
+    # publishes for this OS -- which is NOT always the backend your GPU vendor
+    # implies. Upstream ships no Linux CUDA build, so an NVIDIA box on Linux gets
+    # the Vulkan one. Report the two facts separately instead of merging them into
+    # a single claim that is wrong on that platform.
+    runtime_meta = labkit.repo_root() / "runtime" / "active.json"
+    if runtime_meta.exists():
+        try:
+            asset = json.loads(runtime_meta.read_text()).get("asset", "?")
+        except (ValueError, OSError):
+            asset = "?"
+        print(f"  llama.cpp     : prebuilt release {labkit.LLAMA_CPP_BUILD}  ({asset})")
+        live, why = labkit.gpu_offload_is_live()
+        print(f"  GPU offload   : {'ACTIVE -- ' + why if live else 'OFF -- ' + why}")
+        if not live and rec["llama_cpp_backend"] != "CPU":
+            print(f"                  base track is unaffected (100 pts need no GPU).")
+            print(f"                  to use the {rec['llama_cpp_backend']} you have, build from source:")
+            print(f"                  LLAMA_CMAKE_FLAGS={rec['llama_cpp_cmake_flag']} make build-llama")
+    else:
+        print(f"  llama.cpp     : prebuilt release {labkit.LLAMA_CPP_BUILD}  (asset picked by `make setup`)")
+    print(f"  source build  : {rec['llama_cpp_cmake_flag'] or 'CPU only'}  (bonus B1 -- not used by the base track)")
     print(f"  Tracks open   : {', '.join(rec['recommended_paths'])}")
     env = os.environ.get("LAB_RUNTIME_ENV")
     if env:

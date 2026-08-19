@@ -392,6 +392,7 @@ Không commit `models/*.gguf` hoặc `runtime/`. Hai path này đã có trong `.
 | Triệu chứng | Cách xử lý |
 |---|---|
 | `unknown model architecture: 'gemma4'` | llama.cpp quá cũ. Chạy `make runtime` để tải lại bản đã pin. |
+| `make probe` báo `GPU offload : OFF` dù máy có GPU | Bình thường, và **không mất điểm** — toàn bộ 100 điểm base chạy trên CPU. Upstream llama.cpp **không** phát hành bản CUDA cho Linux, nên máy Linux + NVIDIA nhận bản Vulkan; thiếu Vulkan ICD thì runtime không thấy device nào. Lab tự set `ngl=0` để report không ghi sai. Muốn dùng GPU: `LLAMA_CMAKE_FLAGS=-DGGML_CUDA=ON make build-llama` (bonus B1). |
 | `make serve` báo không tìm thấy venv | Bạn chưa chạy `make setup`. |
 | `couldn't bind HTTP server socket … port: 8080` | Có process khác đang giữ port 8080. Đổi port: `LAB_SERVER_PORT=8090 make serve` (và dùng cùng biến đó cho `make smoke`, `make load-10/50`, `make metrics`, `make pipeline`). Trên Colab notebook đã set sẵn. |
 | `make bench` fail, câu trả lời rỗng | Gemma 4 là reasoning model; lab đã set `--reasoning off`. Nếu bạn tự bật `LAB_REASONING=on`, `content` sẽ rỗng cho đến khi model "nghĩ" xong. |

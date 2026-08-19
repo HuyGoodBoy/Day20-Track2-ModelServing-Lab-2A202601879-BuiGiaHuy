@@ -70,7 +70,16 @@ def main() -> int:
 
     hw = labkit.load_hardware()
     model = str(labkit.repo_root() / labkit.load_active()["primary_model"])
-    threads, ngl = labkit.threads(hw), labkit.n_gpu_layers(hw)
+    threads = labkit.threads(hw)
+    # B1 asks a COMPILER question, so both binaries must run on the same backend.
+    # The prebuilt asset and your source build often differ there -- upstream ships
+    # no Linux CUDA build, so an NVIDIA box gets Vulkan (frequently with no ICD, i.e.
+    # CPU) while a -DGGML_CUDA=ON source build offloads. Benchmarking those two at
+    # -ngl 99 measures the accelerator and prints it under a "-DGGML_NATIVE=ON"
+    # headline. Pin both to CPU; report any offload separately below.
+    ngl = 0
+    pre_dev, src_dev = labkit.visible_devices(pre), labkit.visible_devices(src)
+    backends_differ = bool(pre_dev) != bool(src_dev)
     cpu = hw.get("cpu", {})
     exts = [n for n, k in (("AVX-512", "avx512"), ("AVX2", "avx2"), ("NEON", "neon"))
             if cpu.get(k)]
@@ -84,12 +93,27 @@ def main() -> int:
     print(f"  source  : {src.relative_to(labkit.repo_root())}")
     print(f"            {version_of(src)}\n")
 
-    print("  running prebuilt ...", flush=True)
+    print(f"  devices : prebuilt {pre_dev or ['(none - CPU)']}")
+    print(f"            source   {src_dev or ['(none - CPU)']}")
+    if backends_differ:
+        print("  NOTE    : the two binaries do NOT share a backend. Pinning both to")
+        print("            -ngl 0 so this measures the compiler, not the accelerator.")
+    print()
+
+    print("  running prebuilt   (-ngl 0) ...", flush=True)
     a = run(pre, model, threads, ngl, args.metric, args.reps)
     print(f"    {a:.1f} tok/s")
-    print("  running source build ...", flush=True)
+    print("  running source build (-ngl 0) ...", flush=True)
     b = run(src, model, threads, ngl, args.metric, args.reps)
     print(f"    {b:.1f} tok/s")
+
+    # Offload is a separate finding, reported as its own number so it can never be
+    # mistaken for the compiler result.
+    offload = 0.0
+    if src_dev:
+        print("  running source build (-ngl 99, offloaded) ...", flush=True)
+        offload = run(src, model, threads, 99, args.metric, args.reps)
+        print(f"    {offload:.1f} tok/s")
 
     if not a or not b:
         labkit.die("One of the binaries produced no number -- run each by hand to see why.")
@@ -103,27 +127,53 @@ def main() -> int:
 
     table = labkit.md_table(
         ["Binary", "Built for", f"{args.metric} (tok/s)", "Relative"],
-        [["prebuilt release", "generic baseline CPU", f"{a:.1f}", "1.00x"],
+        [["prebuilt release", "runtime CPU dispatch", f"{a:.1f}", "1.00x"],
          ["your source build", f"this CPU (`-DGGML_NATIVE=ON`)", f"{b:.1f}", f"{gain:.2f}x"]],
     )
+    offload_block = ""
+    if offload:
+        offload_block = f"""
+### Separately: what GPU offload is worth on the same binary
+
+`{args.metric}` on the source build at `-ngl 99` instead of `-ngl 0`:
+
+| Source build | {args.metric} (tok/s) | vs its own CPU run |
+|:--|--:|--:|
+| `-ngl 0` (CPU) | {b:.1f} | 1.00x |
+| `-ngl 99` (offloaded to {src_dev[0]}) | {offload:.1f} | {offload / b:.2f}x |
+
+This number is **not** part of the B1 comparison above -- it is a different knob.
+Reporting it separately is the point: a compiler flag and an accelerator are not
+interchangeable explanations for a speedup.
+"""
+    mismatch_block = ""
+    if backends_differ:
+        mismatch_block = f"""
+> **Backend mismatch, handled.** The prebuilt binary sees
+> `{pre_dev or '(no devices)'}` and your source build sees `{src_dev or '(no devices)'}`.
+> Left at `-ngl 99` this comparison would have measured the accelerator and printed
+> it under a compiler headline, so both sides were pinned to `-ngl 0`.
+"""
     md = f"""# Bonus B1 - Prebuilt vs source build
 
 Host `{labkit.host_tag()}` · CPU `{cpu.get('model', '?')}`
 Vector extensions detected: {', '.join(exts) or 'none'}
-llama.cpp `{labkit.LLAMA_CPP_BUILD}` both sides · `threads={threads}` `ngl={ngl}` ·
+llama.cpp `{labkit.LLAMA_CPP_BUILD}` both sides · `threads={threads}` ·
+**both pinned to `ngl=0`** so this isolates the compiler ·
 metric `{args.metric}`, {args.reps} repetitions
-
+{mismatch_block}
 {table}
 
 On this machine, {verdict}.
 
-before: {a:.1f} tok/s (prebuilt, generic baseline)
+before: {a:.1f} tok/s (prebuilt release)
 after:  {b:.1f} tok/s (source build, -DGGML_NATIVE=ON)
 speedup: {gain:.2f}x
 
-Same source revision, same model, same flags at runtime -- the only difference is
-what the compiler was allowed to assume about the CPU.
-{"A gap this small usually means the prebuilt binary already dispatches to the right kernels at runtime, or that this workload is bandwidth-bound rather than instruction-bound." if 0.97 <= gain <= 1.03 else ""}
+Same source revision, same model, same backend, same `-ngl` -- the only difference
+is what the compiler was allowed to assume about the CPU.
+{"A gap this small usually means the prebuilt binary already dispatches to the right kernels at runtime (releases ship one libggml-cpu-*.so per microarchitecture and pick via CPUID), or that this workload is bandwidth-bound rather than instruction-bound. Both are real findings -- say which one you think it is." if 0.97 <= gain <= 1.03 else ""}
+{offload_block}
 
 ## Your explanation (required -- replace this line)
 

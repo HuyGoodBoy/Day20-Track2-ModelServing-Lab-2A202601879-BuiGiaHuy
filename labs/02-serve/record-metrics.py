@@ -79,7 +79,8 @@ def main() -> int:
             print(f"   busy_slots={sample.get('llamacpp:n_busy_slots_per_decode', 0):5.2f}  "
                   f"processing={sample.get('llamacpp:requests_processing', 0):3.0f}  "
                   f"deferred={sample.get('llamacpp:requests_deferred', 0):3.0f}  "
-                  f"kv={sample.get('llamacpp:kv_cache_usage_ratio', 0):4.2f}  "
+                  + (f"kv={sample['llamacpp:kv_cache_usage_ratio']:4.2f}  "
+                     if 'llamacpp:kv_cache_usage_ratio' in sample else "") +
                   f"tok_pred={sample.get('llamacpp:tokens_predicted_total', 0):8.0f}")
         else:
             misses += 1
@@ -105,6 +106,17 @@ def main() -> int:
     def peak(name: str) -> float:
         return max((r.get(name, 0.0) for r in rows), default=0.0)
 
+    def peak_or_na(name: str, fmt: str = "{:.2f}") -> str:
+        """Never render a gauge this build does not export as a measured value.
+
+        `.get(name, 0)` turns "llama.cpp has no such metric" into a confident 0.00
+        that is indistinguishable from a real reading, in a file the grader reads.
+        kv_cache_usage_ratio is exactly that case on some builds.
+        """
+        if not any(name in r for r in rows):
+            return f"n/a — not exported by llama.cpp `{labkit.LLAMA_CPP_BUILD}`"
+        return fmt.format(peak(name))
+
     slots = labkit.parallel_slots()
     busy_peak = peak("llamacpp:n_busy_slots_per_decode")
     util = (100.0 * busy_peak / slots) if slots else 0.0
@@ -117,7 +129,7 @@ Host `{labkit.host_tag()}` · `--parallel {slots}` · {len(rows)} samples over
     ["`n_busy_slots_per_decode` (avg/decode)", f"{busy_peak:.2f} of {slots} slots ({util:.0f}%)"],
     ["`requests_processing`", f"{peak('llamacpp:requests_processing'):.0f}"],
     ["`requests_deferred`", f"{peak('llamacpp:requests_deferred'):.0f}"],
-    ["`kv_cache_usage_ratio`", f"{peak('llamacpp:kv_cache_usage_ratio'):.2f}"],
+    ["`kv_cache_usage_ratio`", peak_or_na("llamacpp:kv_cache_usage_ratio")],
     ["`tokens_predicted_total` (final)", f"{rows[-1].get('llamacpp:tokens_predicted_total', 0):.0f}"],
 ])}
 
