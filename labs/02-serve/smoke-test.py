@@ -44,7 +44,7 @@ def read_metrics(base: str) -> dict[str, float]:
 
 
 def main() -> int:
-    port = labkit.env_int("LAB_SERVER_PORT", labkit.DEFAULT_PORT)
+    port = labkit.server_port()
     base = f"http://localhost:{port}"
 
     labkit.banner(f"Smoke test against {base}")

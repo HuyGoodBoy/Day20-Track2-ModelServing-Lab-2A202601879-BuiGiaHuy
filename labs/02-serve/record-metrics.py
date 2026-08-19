@@ -58,7 +58,7 @@ def scrape(url: str) -> dict[str, float]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    port = labkit.env_int("LAB_SERVER_PORT", labkit.DEFAULT_PORT)
+    port = labkit.server_port()
     ap.add_argument("--url", default=f"http://localhost:{port}/metrics")
     ap.add_argument("--duration", type=int, default=60)
     ap.add_argument("--interval", type=float, default=2.0)

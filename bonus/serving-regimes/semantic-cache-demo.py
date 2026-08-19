@@ -182,8 +182,11 @@ def main() -> int:
     ap.add_argument("--threshold", type=float, default=0.80)
     ap.add_argument("--offline", action="store_true",
                     help="No servers: synthetic embeddings + fake LLM (logic demo / smoke test).")
-    ap.add_argument("--chat-url", default="http://localhost:8080/v1")
-    ap.add_argument("--embed-url", default="http://localhost:8081/v1")
+    import os as _os
+    _cp = _os.environ.get("LAB_SERVER_PORT", "8080")
+    _ep = _os.environ.get("LAB_EMBED_PORT", "8081")
+    ap.add_argument("--chat-url", default=f"http://localhost:{_cp}/v1")
+    ap.add_argument("--embed-url", default=f"http://localhost:{_ep}/v1")
     ap.add_argument("--sweep", action="store_true",
                     help="Show hit rate across thresholds (offline only).")
     args = ap.parse_args()

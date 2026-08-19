@@ -23,6 +23,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
 $VenvPy = Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
+$Port   = if ($env:LAB_SERVER_PORT) { $env:LAB_SERVER_PORT } else { '8080' }
 $SysPy  = 'python'
 
 function Need-Venv {
@@ -97,8 +98,8 @@ switch ($Target) {
     'serve'       { Py labs\02-serve\serve.py @Rest }
     'serve-embed' { Py labs\02-serve\serve.py --embedding @Rest }
     'smoke'       { Py labs\02-serve\smoke-test.py }
-    'load-10'     { Locust -f labs\02-serve\load-test.py --headless -u 10 -r 5 -t 1m --host http://localhost:8080 --csv benchmarks\locust-10 --csv-full-history }
-    'load-50'     { Locust -f labs\02-serve\load-test.py --headless -u 50 -r 25 -t 1m --host http://localhost:8080 --csv benchmarks\locust-50 --csv-full-history }
+    'load-10'     { Locust -f labs\02-serve\load-test.py --headless -u 10 -r 5 -t 1m --host http://localhost:$Port --csv benchmarks\locust-10 --csv-full-history }
+    'load-50'     { Locust -f labs\02-serve\load-test.py --headless -u 50 -r 25 -t 1m --host http://localhost:$Port --csv benchmarks\locust-50 --csv-full-history }
     'metrics'     { Py labs\02-serve\record-metrics.py --duration 60 --label u50 }
     'load-report' { Py labs\02-serve\load-report.py }
 

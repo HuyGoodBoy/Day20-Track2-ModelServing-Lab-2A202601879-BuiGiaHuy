@@ -186,7 +186,21 @@ def main() -> int:
          "TPOT P50/P95 (ms)", "E2E P50/P95/P99 (ms)", "Decode (tok/s)"],
         rows,
     )
-    speedup = a["tpot_p50"] / b["tpot_p50"] if b["tpot_p50"] else 0.0
+    # Ratio of decode rates: >1 means the compare quant is faster, <1 means slower.
+    ratio = (b["decode_tok_s"] / a["decode_tok_s"]) if a["decode_tok_s"] else 0.0
+    if ratio > 1.02:
+        verdict = (f"`{b['quant']}` decodes **{ratio:.2f}x faster** than `{a['quant']}` here, "
+                   f"for {a['size_gb'] - b['size_gb']:.2f} GB less on disk.")
+    elif ratio < 0.98:
+        verdict = (f"`{b['quant']}` decodes **{1 / ratio:.2f}x SLOWER** than `{a['quant']}` here, "
+                   f"despite being {a['size_gb'] - b['size_gb']:.2f} GB smaller. That is a real "
+                   f"result, not a mistake: fewer bits only buys speed when decode is limited by "
+                   f"memory bandwidth. On a machine that is compute-limited instead — few cores, "
+                   f"no GPU offload — the extra dequantization work of a heavily-quantized format "
+                   f"can cost more than the bytes it saves. Say which case yours is.")
+    else:
+        verdict = (f"`{b['quant']}` and `{a['quant']}` decode within 2% of each other here, "
+                   f"for {a['size_gb'] - b['size_gb']:.2f} GB difference on disk.")
 
     md = f"""# 01 - Measure: latency baseline
 
@@ -199,8 +213,7 @@ Completed requests: `{a['quant']}` {a['n_requests']}/{len(PROMPTS)} · `{b['quan
 
 - **TTFT** = prefill. Short prompts keep it small; long-context RAG is where it explodes.
 - **TPOT** = per-output-token decode cost, bounded by memory bandwidth. `decode tok/s = 1000 / TPOT_p50`.
-- `{b['quant']}` decodes {speedup:.2f}x faster than `{a['quant']}` here, for
-  {a['size_gb'] - b['size_gb']:.2f} GB less on disk.
+- {verdict}
 
 ## Your observation (required -- replace this line)
 

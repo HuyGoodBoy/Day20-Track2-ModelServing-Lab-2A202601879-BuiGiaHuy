@@ -146,8 +146,22 @@ def model_file_url(filename: str, mirror: bool = False, key: str | None = None) 
     return f"{host}/{model_repo(key)}/resolve/main/{filename}"
 
 
-DEFAULT_PORT = 8080
-EMBED_PORT = 8081
+# Ports are overridable because some hosts already occupy 8080 — Colab runs its own
+# service there, so the cloud notebook sets LAB_SERVER_PORT.
+DEFAULT_PORT = 8080          # fallback when LAB_SERVER_PORT is unset
+EMBED_PORT = 8081            # fallback when LAB_EMBED_PORT is unset
+
+
+def server_port() -> int:
+    return env_int("LAB_SERVER_PORT", DEFAULT_PORT)
+
+
+def embed_port() -> int:
+    return env_int("LAB_EMBED_PORT", EMBED_PORT)
+
+
+def base_url(port: int | None = None) -> str:
+    return f"http://localhost:{port or server_port()}"
 
 
 # ─────────────────────────────────────────────────────────── paths
@@ -300,11 +314,12 @@ def source_build_bin(name: str) -> Path | None:
 
 def server_cmd(
     model: str,
-    port: int = DEFAULT_PORT,
+    port: int | None = None,
     embedding: bool = False,
     extra: list[str] | None = None,
 ) -> list[str]:
     bin_path = runtime_bin("llama-server")
+    port = port or (embed_port() if embedding else server_port())
     cmd = [
         str(bin_path),
         "-m", str(model),
@@ -325,10 +340,10 @@ def server_cmd(
     return cmd + (extra or [])
 
 
-def wait_healthy(port: int = DEFAULT_PORT, timeout: float = 180.0) -> bool:
+def wait_healthy(port: int | None = None, timeout: float = 180.0) -> bool:
     import httpx
 
-    url = f"http://127.0.0.1:{port}/health"
+    url = f"http://127.0.0.1:{port or server_port()}/health"
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
@@ -341,12 +356,13 @@ def wait_healthy(port: int = DEFAULT_PORT, timeout: float = 180.0) -> bool:
 
 
 @contextmanager
-def serve_bg(model: str, port: int = DEFAULT_PORT, embedding: bool = False, quiet: bool = True):
+def serve_bg(model: str, port: int | None = None, embedding: bool = False, quiet: bool = True):
     """Run llama-server for the duration of a block, then shut it down.
 
     Lets track 01 measure real TTFT/TPOT over HTTP without asking the student to
     juggle two terminals before they have learned what a serving stack is.
     """
+    port = port or (embed_port() if embedding else server_port())
     cmd = server_cmd(model, port=port, embedding=embedding)
     sink = subprocess.DEVNULL if quiet else None
     proc = subprocess.Popen(cmd, stdout=sink, stderr=sink)

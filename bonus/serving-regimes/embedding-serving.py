@@ -103,7 +103,9 @@ def embed_remote(texts: list[str], base_url: str) -> list[np.ndarray]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Embedding & reranker serving demo (Day 20 §5).")
-    ap.add_argument("--base-url", default="http://localhost:8081/v1",
+    import os as _os
+    ap.add_argument("--base-url",
+                    default=f"http://localhost:{_os.environ.get('LAB_EMBED_PORT', '8081')}/v1",
                     help="OpenAI-compatible embeddings endpoint (llama-server --embedding).")
     ap.add_argument("--offline", action="store_true",
                     help="No server: deterministic bag-of-words embeddings (logic demo / smoke test).")

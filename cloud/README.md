@@ -95,6 +95,7 @@ nén vào clone local của bạn, rồi làm lần lượt:
 | Kaggle báo "no internet" | Settings sidebar → Internet → On. |
 | Colab free tier hết thời gian | Rút ngắn load test: set `LOAD_DURATION = '30s'` trong cell 1. |
 | `unknown model architecture: 'gemma4'` | Bước tải runtime đã bị bỏ qua hoặc fail. Chạy lại section 4. |
+| `couldn't bind HTTP server socket ... port: 8080` | Colab đã chiếm port 8080. Notebook đã set `LAB_SERVER_PORT = '8090'` sẵn — nếu bạn sửa dòng đó thì chọn port còn trống khác. |
 | Hết disk | Free tier thường đủ cho 5.2 GB. Nếu buộc phải xóa, xóa `models/*Q2*`; bạn sẽ mất hàng quantization thứ hai của rubric 3–5. |
 
 ## Giới hạn cần nêu trong REFLECTION

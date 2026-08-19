@@ -7,6 +7,9 @@ default -- there is no second, feature-poor server to switch to.
 
     make serve                     # chat + /metrics on :8080
     make serve-embed               # embedding regime on :8081 (bonus section 5)
+
+Ports come from LAB_SERVER_PORT / LAB_EMBED_PORT when set. Colab already uses 8080,
+which is why the cloud notebook overrides it.
     python labs/02-serve/serve.py --port 9000
     python labs/02-serve/serve.py -- --cache-type-k q8_0 --cache-type-v q8_0
 """
@@ -45,7 +48,7 @@ def main() -> int:
     if not pathlib.Path(model).exists():
         labkit.die(f"Model file not found: {model}", "Run: make setup")
 
-    port = args.port or (labkit.EMBED_PORT if args.embedding else labkit.DEFAULT_PORT)
+    port = args.port or (labkit.embed_port() if args.embedding else labkit.server_port())
     cmd = labkit.server_cmd(model, port=port, embedding=args.embedding, extra=args.extra)
 
     quant = active.get("compare_quant" if args.compare else "primary_quant", "?")

@@ -162,10 +162,10 @@ QUERIES = [
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="RAG pipeline against local llama-server.")
-    port = labkit.env_int("LAB_SERVER_PORT", labkit.DEFAULT_PORT)
+    port = labkit.server_port()
     ap.add_argument("--base-url", default=f"http://localhost:{port}")
     ap.add_argument("--embed-url", default=None,
-                    help=f"Embedding server, e.g. http://localhost:{labkit.EMBED_PORT} "
+                    help=f"Embedding server, e.g. http://localhost:{labkit.embed_port()} "
                          "(bonus C9). Omit to use keyword retrieval.")
     ap.add_argument("--k", type=int, default=3)
     args = ap.parse_args()
