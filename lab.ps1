@@ -1,5 +1,5 @@
 <#
-  Windows runner — the equivalent of `make <target>` for students without make.
+  Windows runner - the equivalent of `make <target>` for students without make.
 
   Works in Windows PowerShell 5.1 (powershell.exe) and PowerShell 7+ (pwsh).
 
@@ -12,7 +12,7 @@
       .\lab.ps1 verify
 
   Every target maps 1:1 to the make target of the same name, so GUIDE.md applies
-  as written — just substitute `.\lab.ps1 x` for `make x`.
+  as written - just substitute `.\lab.ps1 x` for `make x`.
 #>
 param(
     [Parameter(Position = 0)] [string] $Target = "help",
@@ -45,8 +45,8 @@ function Locust {
 switch ($Target) {
     'help' {
         Write-Host ""
-        Write-Host "Day 20 lab — Windows runner" -ForegroundColor Cyan
-        Write-Host "Usage:  .\lab.ps1 <target>"
+        Write-Host "Day 20 lab - Windows runner" -ForegroundColor Cyan
+        Write-Host "Usage:  .\lab.ps1 target"
         Write-Host ""
         Write-Host "Setup (00)"
         Write-Host "  probe          Probe hardware -> hardware.json"
@@ -60,25 +60,25 @@ switch ($Target) {
         Write-Host "Serve (02)"
         Write-Host "  serve          Start llama-server on :8080 (leave running)"
         Write-Host "  serve-embed    Embedding server on :8081 (bonus C9)"
-        Write-Host "  smoke          Prove the API + non-zero /metrics"
-        Write-Host "  load-10        Load test, 10 users, 60s"
-        Write-Host "  load-50        Load test, 50 users, 60s"
-        Write-Host "  metrics        Sample /metrics 60s (run WHILE load-50 runs)"
-        Write-Host "  load-report    Saturation reading from both load runs"
+        Write-Host "  smoke           Prove the API + non-zero /metrics"
+        Write-Host "  load-10         Load test, 10 users, 60s"
+        Write-Host "  load-50         Load test, 50 users, 60s"
+        Write-Host "  metrics         Sample /metrics 60s (run WHILE load-50 runs)"
+        Write-Host "  load-report     Saturation reading from both load runs"
         Write-Host ""
         Write-Host "Integrate (03)"
-        Write-Host "  pipeline       RAG pipeline -> llama-server"
+        Write-Host "  pipeline        RAG pipeline -> llama-server"
         Write-Host ""
         Write-Host "Submission"
-        Write-Host "  verify         Check submission readiness"
+        Write-Host "  verify          Check submission readiness"
         Write-Host ""
         Write-Host "Bonus"
         Write-Host "  sweep-quant | sweep-ctx | sweep-batch | sweep-gpu"
         Write-Host "  compare-builds | build-llama | semantic-cache-offline | embed-demo-offline"
         Write-Host ""
         Write-Host "Housekeeping"
-        Write-Host "  clean          Remove generated reports"
-        Write-Host "  clean-all      Also remove venv, runtime, models, hardware.json"
+        Write-Host "  clean           Remove generated reports"
+        Write-Host "  clean-all       Also remove venv, runtime, models, hardware.json"
         Write-Host ""
         Write-Host "You need 3 windows for the 50-user step: serve / load-50 / metrics." -ForegroundColor Yellow
         Write-Host ""

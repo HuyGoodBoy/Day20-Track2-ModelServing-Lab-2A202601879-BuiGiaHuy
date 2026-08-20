@@ -196,7 +196,7 @@ def main() -> int:
     cpu, ram, gpu = detect_cpu(), detect_ram_gb(), detect_gpu()
     rec = recommend(cpu, ram, gpu)
 
-    line = "─" * 64
+    line = "-" * 64
     print(line)
     print(f"  Platform : {platform.system()} {platform.release()} ({platform.machine()})")
     print(f"  CPU      : {cpu['model']}")

@@ -60,7 +60,7 @@ def main() -> int:
                     help="Also fetch the MTP head (~98 MB) for bonus C1 speculative decoding")
     args = ap.parse_args()
 
-    models_dir = labkit.repo_root() / "models"
+    models_dir = labkit.model_dir()
     models_dir.mkdir(exist_ok=True)
     key = labkit.model_key()
     spec = labkit.model_spec(key)

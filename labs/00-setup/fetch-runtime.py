@@ -11,6 +11,15 @@ and is new enough to load Gemma 4 (architecture "gemma4", April 2026).
 """
 from __future__ import annotations
 
+
+def _rel_path(p):
+    """Get relative path from repo_root, or return str(p) if outside repo."""
+    try:
+        return p.relative_to(labkit.repo_root())
+    except ValueError:
+        return p
+
+
 import argparse
 import json
 import pathlib
@@ -190,7 +199,12 @@ def download(asset: str, dest: pathlib.Path) -> pathlib.Path:
 
 
 def extract(archive: pathlib.Path, into: pathlib.Path) -> None:
-    print(f"==> Extracting into {into.relative_to(labkit.repo_root())}/")
+    # Handle paths outside repo_root (e.g., D:\day20-runtime)
+    try:
+        rel_path = into.relative_to(labkit.repo_root())
+    except ValueError:
+        rel_path = into
+    print(f"==> Extracting into {rel_path}/")
     into.mkdir(parents=True, exist_ok=True)
     if archive.name.endswith((".tar.gz", ".tgz")):
         with tarfile.open(archive) as tf:
@@ -233,7 +247,8 @@ def main() -> int:
     # build and blow up relative_to() with a ValueError.
     if existing:
         try:
-            existing = existing.resolve().relative_to(labkit.repo_root())
+            existing = existing.resolve()
+            existing = _rel_path(existing)
         except ValueError:
             existing = None
     if existing and not args.force:
@@ -282,9 +297,9 @@ def main() -> int:
     if not server:
         labkit.die(f"Extracted {asset} but found no llama-server inside {into}/")
 
-    print(f"\n==> llama-server : {server.relative_to(labkit.repo_root())}")
+    print(f"\n==> llama-server : {_rel_path(server)}")
     if bench:
-        print(f"==> llama-bench  : {bench.relative_to(labkit.repo_root())}")
+        print(f"==> llama-bench  : {_rel_path(bench)}")
     rc = subprocess.run([str(server), "--version"], capture_output=True, text=True, check=False)
     version = (rc.stdout + rc.stderr).strip().splitlines()
     for line in version[:3]:
@@ -292,8 +307,8 @@ def main() -> int:
 
     (labkit.runtime_dir() / "active.json").write_text(
         json.dumps({"build": BUILD, "asset": asset,
-                    "llama_server": str(server.relative_to(labkit.repo_root())),
-                    "llama_bench": str(bench.relative_to(labkit.repo_root())) if bench else None},
+                    "llama_server": str(_rel_path(server)),
+                    "llama_bench": str(_rel_path(bench)) if bench else None},
                    indent=2)
     )
     print("\n==> Runtime ready. No compiler required.")

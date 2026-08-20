@@ -28,7 +28,7 @@ from pathlib import Path
 # build newer than that; this one is well past it. Bump deliberately, not casually.
 LLAMA_CPP_BUILD = "b10488"
 
-# ── Model registry ────────────────────────────────────────────
+# -- Model registry --------------------------------------------
 # Two options. Gemma 4 E2B is the default; Qwen3.5 0.8B is the small path for
 # laptops that cannot hold ~4 GB of weights, or for anyone who wants the whole
 # lab to run in a fraction of the time. Pick one with LAB_MODEL=<key>.
@@ -146,7 +146,7 @@ def model_file_url(filename: str, mirror: bool = False, key: str | None = None) 
     return f"{host}/{model_repo(key)}/resolve/main/{filename}"
 
 
-# Ports are overridable because some hosts already occupy 8080 — Colab runs its own
+# Ports are overridable because some hosts already occupy 8080 -- Colab runs its own
 # service there, so the cloud notebook sets LAB_SERVER_PORT.
 DEFAULT_PORT = 8080          # fallback when LAB_SERVER_PORT is unset
 EMBED_PORT = 8081            # fallback when LAB_EMBED_PORT is unset
@@ -164,11 +164,27 @@ def base_url(port: int | None = None) -> str:
     return f"http://localhost:{port or server_port()}"
 
 
-# ─────────────────────────────────────────────────────────── paths
+# ----------------------------------------------------------- paths
 
 def repo_root() -> Path:
     """Repo root, resolved from this file - so scripts work from any CWD."""
     return Path(__file__).resolve().parents[1]
+
+
+def runtime_dir() -> Path:
+    # Use D: drive if available to save C: disk space
+    d_runtime = Path("D:/day20-runtime")
+    if d_runtime.exists():
+        return d_runtime
+    return repo_root() / "runtime"
+
+
+def model_dir() -> Path:
+    # Use D: drive if available to save C: disk space
+    d_models = Path("D:/day20-models")
+    if d_models.exists():
+        return d_models
+    return repo_root() / "models"
 
 
 def hardware_json() -> Path:
@@ -176,7 +192,7 @@ def hardware_json() -> Path:
 
 
 def active_json() -> Path:
-    return repo_root() / "models" / "active.json"
+    return model_dir() / "active.json"
 
 
 def bench_dir() -> Path:
@@ -185,11 +201,7 @@ def bench_dir() -> Path:
     return d
 
 
-def runtime_dir() -> Path:
-    return repo_root() / "runtime"
-
-
-# ─────────────────────────────────────────────────────────── manifests
+# ----------------------------------------------------------- manifests
 
 def load_hardware(required: bool = True) -> dict:
     p = hardware_json()
@@ -217,7 +229,7 @@ def compare_model() -> str:
     return load_active()["compare_model"]
 
 
-# ─────────────────────────────────────────────────────────── hardware defaults
+# ----------------------------------------------------------- hardware defaults
 
 def any_gpu(hw: dict | None = None) -> bool:
     hw = hw if hw is not None else load_hardware(required=False)
@@ -320,7 +332,7 @@ def reasoning_mode() -> str:
     return mode if mode in ("on", "off", "auto") else "off"
 
 
-# ─────────────────────────────────────────────────────────── env knobs
+# ----------------------------------------------------------- env knobs
 
 def env_int(name: str, default: int) -> int:
     raw = (os.environ.get(name) or "").strip()
@@ -338,7 +350,7 @@ def env_float(name: str, default: float) -> float:
         return default
 
 
-# ─────────────────────────────────────────────────────────── binaries
+# ----------------------------------------------------------- binaries
 
 def runtime_bin(name: str, required: bool = True) -> Path | None:
     """Locate a llama.cpp binary: prebuilt runtime/ first, then a bonus source
@@ -374,7 +386,7 @@ def source_build_bin(name: str) -> Path | None:
     return None
 
 
-# ─────────────────────────────────────────────────────────── server
+# ----------------------------------------------------------- server
 
 def server_cmd(
     model: str,
@@ -409,7 +421,7 @@ def wait_healthy(port: int | None = None, timeout: float = 180.0,
     """Poll /health until the server answers.
 
     Pass `proc` so a server that dies at startup ends the wait immediately instead
-    of burning the full timeout — the student needs the error, not a 180s pause.
+    of burning the full timeout -- the student needs the error, not a 180s pause.
     """
     import httpx
 
@@ -472,7 +484,7 @@ def serve_bg(model: str, port: int | None = None, embedding: bool = False, quiet
             log.close()
 
 
-# ─────────────────────────────────────────────────────────── llama-bench parsing
+# ----------------------------------------------------------- llama-bench parsing
 
 def bench_metric(output: str, metric: str) -> float:
     """Pull a tok/s number out of llama-bench's markdown table.
@@ -506,7 +518,7 @@ def run_bench(args: list[str], timeout: int = 1800) -> str:
     return proc.stdout + proc.stderr
 
 
-# ─────────────────────────────────────────────────────────── reports
+# ----------------------------------------------------------- reports
 
 def write_report(filename: str, markdown: str, data: object | None = None) -> Path:
     out = bench_dir() / filename
@@ -534,7 +546,7 @@ def die(*lines: str) -> None:
 
 
 def banner(title: str) -> None:
-    print(f"\n{'─' * 64}\n  {title}\n{'─' * 64}")
+    print(f"\n{'-' * 64}\n  {title}\n{'-' * 64}")
 
 
 def host_tag() -> str:
